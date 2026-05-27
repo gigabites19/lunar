@@ -10,11 +10,12 @@ use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\Livewire;
 use Lunar\Admin\Livewire\Components\ActivityLogFeed;
-use Lunar\Admin\Support\Infolists\Components\Timeline;
-use Lunar\Models\Currency;
-use Lunar\Models\Order;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Order;
+use Lunar\Filament\Infolists\Components\Timeline;
+use Lunar\Tests\Admin\Unit\Livewire\TestCase;
 
-uses(\Lunar\Tests\Admin\Unit\Livewire\TestCase::class)
+uses(TestCase::class)
     ->group('livewire.activity-feed');
 
 describe('activity feed component', function () {

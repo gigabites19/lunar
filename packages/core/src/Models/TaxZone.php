@@ -1,16 +1,16 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Traits\HasDefaultRecord;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Base\Traits\LogsActivity;
-use Lunar\Database\Factories\TaxZoneFactory;
+use Lunar\Core\Database\Factories\TaxZoneFactory;
+use Lunar\Core\Models\Concerns\HasDefaultRecord;
+use Lunar\Core\Models\Concerns\HasMacros;
+use Lunar\Core\Models\Concerns\LogsActivity;
 
 /**
  * @property int $id
@@ -19,10 +19,10 @@ use Lunar\Database\Factories\TaxZoneFactory;
  * @property string $price_display
  * @property bool $active
  * @property bool $default
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class TaxZone extends BaseModel implements Contracts\TaxZone
+class TaxZone extends Base implements Contracts\TaxZone
 {
     use HasDefaultRecord;
     use HasFactory;

@@ -1,21 +1,23 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
-
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
-use Lunar\Exceptions\MissingCurrencyPriceException;
-use Lunar\Facades\Pricing;
-use Lunar\Models\Currency;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Price;
-use Lunar\Models\Product;
-use Lunar\Models\ProductVariant;
-use Lunar\Models\TaxClass;
-use Lunar\Models\TaxRate;
-use Lunar\Models\TaxRateAmount;
-use Lunar\Models\TaxZone;
+use Lunar\Core\Exceptions\MissingCurrencyPriceException;
+use Lunar\Core\Facades\Pricing;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\CustomerGroup;
+use Lunar\Core\Models\Price;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Core\Models\TaxClass;
+use Lunar\Core\Models\TaxRate;
+use Lunar\Core\Models\TaxRateAmount;
+use Lunar\Core\Models\TaxZone;
+use Lunar\Tests\Core\TestCase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(TestCase::class)->group('cross-db');
+
+uses(RefreshDatabase::class);
 
 test('can create prices through relationship', function () {
     $product = Product::factory()->create();
@@ -32,6 +34,16 @@ test('can create prices through relationship', function () {
     ]);
 
     expect($variant->prices)->toHaveCount(1);
+});
+
+test('shippable attribute is cast to bool', function () {
+    $variant = ProductVariant::factory()->create([
+        'shippable' => 0,
+    ])->fresh();
+
+    expect($variant->shippable)->toBeFalse()
+        ->and($variant->isShippable())->toBeFalse()
+        ->and($variant->getType())->toBe('digital');
 });
 
 test('can get correct price', function () {
@@ -87,11 +99,11 @@ test('can get correct price', function () {
 
     $variant = $variant->load('prices');
 
-    expect(90)->toEqual(Pricing::for($variant)->get()->matched->price->value);
-    expect(60)->toEqual(Pricing::qty(5)->for($variant)->get()->matched->price->value);
-    expect(30)->toEqual(Pricing::qty(5)->customerGroup($groupB)->for($variant)->get()->matched->price->value);
-    expect(80)->toEqual(Pricing::customerGroup($groupB)->for($variant)->get()->matched->price->value);
-    expect(90)->toEqual(Pricing::customerGroup($groupA)->for($variant)->get()->matched->price->value);
+    expect(90)->toEqual(Pricing::for($variant)->get()->matched->price);
+    expect(60)->toEqual(Pricing::qty(5)->for($variant)->get()->matched->price);
+    expect(30)->toEqual(Pricing::qty(5)->customerGroup($groupB)->for($variant)->get()->matched->price);
+    expect(80)->toEqual(Pricing::customerGroup($groupB)->for($variant)->get()->matched->price);
+    expect(90)->toEqual(Pricing::customerGroup($groupA)->for($variant)->get()->matched->price);
 });
 
 test('can get correct price based on currency', function () {
@@ -130,11 +142,11 @@ test('can get correct price based on currency', function () {
 
     $variant = $variant->load('prices');
 
-    expect(100)->toEqual(Pricing::currency($currencyA)->for($variant)->get()->matched->price->value);
-    expect(200)->toEqual(Pricing::currency($currencyB)->for($variant)->get()->matched->price->value);
+    expect(100)->toEqual(Pricing::currency($currencyA)->for($variant)->get()->matched->price);
+    expect(200)->toEqual(Pricing::currency($currencyB)->for($variant)->get()->matched->price);
 
     $this->expectException(MissingCurrencyPriceException::class);
-    expect(200)->toEqual(Pricing::currency($currencyC)->for($variant)->get()->matched->price->value);
+    expect(200)->toEqual(Pricing::currency($currencyC)->for($variant)->get()->matched->price);
 });
 
 test('can get correct price inc tax based on tax class', function () {
@@ -232,4 +244,36 @@ test('can get correct price inc tax based on tax class', function () {
     expect($genericProductVariant->pricing()->currency($currency)->get()->matched->priceIncTax()->value)->toEqual(12200);
     expect($foodProductVariant->pricing()->currency($currency)->get()->matched->priceIncTax()->value)->toEqual(416);
     expect($genericProductVariant->pricing()->qty(20)->currency($currency)->get()->matched->priceIncTax()->value)->toEqual(9760);
+});
+
+test('reports unpurchasable when soft-deleted', function () {
+    $variant = ProductVariant::factory()->create();
+
+    expect($variant->isPurchasable())->toBeTrue();
+
+    $variant->delete();
+
+    expect($variant->fresh()->isPurchasable())->toBeFalse();
+});
+
+test('reports unpurchasable when the parent product is draft', function () {
+    $product = Product::factory()->create(['status' => 'draft']);
+    $variant = ProductVariant::factory()->create(['product_id' => $product->id]);
+
+    expect($variant->isPurchasable())->toBeFalse();
+
+    $product->update(['status' => 'published']);
+
+    expect($variant->fresh()->isPurchasable())->toBeTrue();
+});
+
+test('reports unpurchasable when the parent product is soft-deleted', function () {
+    $product = Product::factory()->create(['status' => 'published']);
+    $variant = ProductVariant::factory()->create(['product_id' => $product->id]);
+
+    expect($variant->isPurchasable())->toBeTrue();
+
+    $product->delete();
+
+    expect($variant->fresh()->isPurchasable())->toBeFalse();
 });

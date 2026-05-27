@@ -1,14 +1,17 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
-use Lunar\Base\Casts\ShippingBreakdown as ShippingBreakdownCasts;
-use Lunar\Base\ValueObjects\Cart\ShippingBreakdown;
-use Lunar\Base\ValueObjects\Cart\ShippingBreakdownItem;
-use Lunar\DataTypes\Price;
-use Lunar\Models\Currency;
-use Lunar\Models\Order;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\Casts\ShippingBreakdown as ShippingBreakdownCasts;
+use Lunar\Core\DataObjects\PriceValue;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Order;
+use Lunar\Core\ValueObjects\Cart\ShippingBreakdown;
+use Lunar\Core\ValueObjects\Cart\ShippingBreakdownItem;
+use Lunar\Tests\Core\TestCase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(TestCase::class);
+
+uses(RefreshDatabase::class);
 
 test('can set from value object', function () {
     $currency = Currency::factory()->create();
@@ -20,7 +23,7 @@ test('can set from value object', function () {
         new ShippingBreakdownItem(
             name: 'Basic Delivery',
             identifier: 'DELIV',
-            price: new Price(700, $currency, 1),
+            price: new PriceValue(700, $currency),
         )
     );
 
@@ -42,7 +45,7 @@ test('can cast to and from model', function () {
         new ShippingBreakdownItem(
             name: 'Basic Delivery',
             identifier: 'DELIV',
-            price: new Price(700, $currency, 1),
+            price: new PriceValue(700, $currency),
         )
     );
 

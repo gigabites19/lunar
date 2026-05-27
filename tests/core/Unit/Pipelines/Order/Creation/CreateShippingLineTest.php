@@ -1,18 +1,21 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
-use Lunar\DataTypes\Price;
-use Lunar\DataTypes\ShippingOption;
-use Lunar\Facades\ShippingManifest;
-use Lunar\Models\Cart;
-use Lunar\Models\CartAddress;
-use Lunar\Models\Currency;
-use Lunar\Models\Order;
-use Lunar\Models\OrderLine;
-use Lunar\Models\TaxClass;
-use Lunar\Pipelines\Order\Creation\CreateShippingLine;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\DataObjects\PriceValue;
+use Lunar\Core\DataTypes\ShippingOption;
+use Lunar\Core\Facades\ShippingManifest;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\CartAddress;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Order;
+use Lunar\Core\Models\OrderLine;
+use Lunar\Core\Models\TaxClass;
+use Lunar\Core\Pipelines\Order\Creation\CreateShippingLine;
+use Lunar\Tests\Core\TestCase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(TestCase::class);
+
+uses(RefreshDatabase::class);
 
 test('can run pipeline', function () {
     $currency = Currency::factory()->create();
@@ -31,7 +34,7 @@ test('can run pipeline', function () {
             name: 'Basic Delivery',
             description: 'Basic Delivery',
             identifier: 'BASDEL',
-            price: new Price(500, $cart->currency, 1),
+            price: new PriceValue(500, $cart->currency),
             taxClass: TaxClass::factory()->create()
         )
     );
@@ -71,7 +74,7 @@ test('can update shipping line if exists', function () {
             name: 'Basic Delivery',
             description: 'Basic Delivery',
             identifier: 'BASDEL',
-            price: new Price(500, $cart->currency, 1),
+            price: new PriceValue(500, $cart->currency),
             taxClass: TaxClass::factory()->create()
         )
     );

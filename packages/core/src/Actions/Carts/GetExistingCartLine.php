@@ -1,15 +1,15 @@
 <?php
 
-namespace Lunar\Actions\Carts;
+namespace Lunar\Core\Actions\Carts;
 
-use Lunar\Actions\AbstractAction;
-use Lunar\Base\Purchasable;
-use Lunar\Models\Cart;
-use Lunar\Models\Contracts\Cart as CartContract;
-use Lunar\Models\Contracts\CartLine as CartLineContract;
-use Lunar\Utils\Arr;
+use Lunar\Core\Contracts\Actions\Carts\GetsExistingCartLine;
+use Lunar\Core\Contracts\Purchasable;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\Contracts\Cart as CartContract;
+use Lunar\Core\Models\Contracts\CartLine as CartLineContract;
+use Lunar\Core\Utils\Arr;
 
-class GetExistingCartLine extends AbstractAction
+class GetExistingCartLine implements GetsExistingCartLine
 {
     /**
      * Execute the action

@@ -29,7 +29,6 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 use Lunar\Admin\Filament\AvatarProviders\GravatarProvider;
 use Lunar\Admin\Filament\Pages\Dashboard;
 use Lunar\Admin\Filament\Resources\ActivityResource;
@@ -37,7 +36,6 @@ use Lunar\Admin\Filament\Resources\AttributeGroupResource;
 use Lunar\Admin\Filament\Resources\BrandResource;
 use Lunar\Admin\Filament\Resources\ChannelResource;
 use Lunar\Admin\Filament\Resources\CollectionGroupResource;
-use Lunar\Admin\Filament\Resources\CollectionGroupResource\Widgets\CollectionTreeView;
 use Lunar\Admin\Filament\Resources\CollectionResource;
 use Lunar\Admin\Filament\Resources\CurrencyResource;
 use Lunar\Admin\Filament\Resources\CustomerGroupResource;
@@ -55,15 +53,10 @@ use Lunar\Admin\Filament\Resources\TagResource;
 use Lunar\Admin\Filament\Resources\TaxClassResource;
 use Lunar\Admin\Filament\Resources\TaxRateResource;
 use Lunar\Admin\Filament\Resources\TaxZoneResource;
-use Lunar\Admin\Filament\Widgets\Dashboard\Orders\AverageOrderValueChart;
-use Lunar\Admin\Filament\Widgets\Dashboard\Orders\LatestOrdersTable;
-use Lunar\Admin\Filament\Widgets\Dashboard\Orders\NewVsReturningCustomersChart;
-use Lunar\Admin\Filament\Widgets\Dashboard\Orders\OrdersSalesChart;
-use Lunar\Admin\Filament\Widgets\Dashboard\Orders\OrderStatsOverview;
-use Lunar\Admin\Filament\Widgets\Dashboard\Orders\OrderTotalsChart;
-use Lunar\Admin\Filament\Widgets\Dashboard\Orders\PopularProductsTable;
 use Lunar\Admin\Http\Controllers\DownloadPdfController;
-use Lunar\Admin\Support\Facades\LunarAccessControl;
+use Lunar\Core\Support\Facades\LunarAccessControl;
+use Lunar\Filament\LunarPlugin;
+use Lunar\Filament\Support\ComponentExtensions\Registry;
 
 class LunarPanelManager
 {
@@ -76,6 +69,11 @@ class LunarPanelManager
     protected array $extensions = [];
 
     protected string $panelId = 'lunar';
+
+    /**
+     * @var array<class-string>
+     */
+    protected array $excludedResources = [];
 
     protected static $resources = [
         ActivityResource::class,
@@ -105,15 +103,11 @@ class LunarPanelManager
         Dashboard::class,
     ];
 
-    protected static $widgets = [
-        OrderStatsOverview::class,
-        OrderTotalsChart::class,
-        OrdersSalesChart::class,
-        AverageOrderValueChart::class,
-        NewVsReturningCustomersChart::class,
-        PopularProductsTable::class,
-        LatestOrdersTable::class,
-    ];
+    /**
+     * Bridge widgets are registered via LunarPlugin; this array stays for backwards-compat with
+     * downstream code calling LunarPanelManager::getWidgets().
+     */
+    protected static $widgets = [];
 
     public function register(): self
     {
@@ -255,7 +249,7 @@ class LunarPanelManager
         }
 
         $plugins = [
-            FilamentApexChartsPlugin::make(),
+            LunarPlugin::make()->fullPreset(),
         ];
 
         $panel = Panel::make()
@@ -284,14 +278,11 @@ class LunarPanelManager
                 static::getPages()
             )
             ->resources(
-                static::getResources()
+                $this->getActiveResources()
             )
             ->discoverClusters(
                 in: realpath(__DIR__.'/Filament/Clusters'),
                 for: 'Lunar\Admin\Filament\Clusters'
-            )
-            ->widgets(
-                static::getWidgets()
             )
             ->authMiddleware([
                 Authenticate::class,
@@ -300,7 +291,6 @@ class LunarPanelManager
             ->discoverLivewireComponents(__DIR__.'/Livewire', 'Lunar\\Admin\\Livewire')
             ->livewireComponents([
                 OrderItemsTable::class,
-                CollectionTreeView::class,
             ])
             ->navigationGroups([
                 'Catalog',
@@ -323,19 +313,20 @@ class LunarPanelManager
 
     public function extensions(array $extensions): self
     {
+        $registry = app(Registry::class);
+
         foreach ($extensions as $class => $extension) {
             if (! is_array($extension)) {
                 $extension = [$extension];
             }
 
-            $this->extensions[$class] = [
-                ...$this->extensions[$class] ?? [],
-                ...collect($extension)->reject(
-                    fn ($extension) => ! class_exists($extension)
-                )->map(
-                    fn ($extension) => app($extension)
-                )->values()->toArray(),
-            ];
+            $instances = collect($extension)
+                ->reject(fn ($extension) => is_string($extension) && ! class_exists($extension))
+                ->map(fn ($extension) => is_object($extension) ? $extension : app($extension))
+                ->values()
+                ->toArray();
+
+            $registry->register([$class => $instances]);
         }
 
         return $this;
@@ -343,7 +334,7 @@ class LunarPanelManager
 
     public function getExtensions(): array
     {
-        return $this->extensions;
+        return app(Registry::class)->all();
     }
 
     /**
@@ -352,6 +343,29 @@ class LunarPanelManager
     public static function getResources(): array
     {
         return static::$resources;
+    }
+
+    /**
+     * Stop registering specific Lunar resources on the panel.
+     *
+     * Use this when you've published a resource via `lunar:admin:publish` and
+     * want to register your owned copy in its place.
+     *
+     * @param  array<class-string>  $resources
+     */
+    public function excludeResources(array $resources): self
+    {
+        $this->excludedResources = array_values(array_unique(array_merge($this->excludedResources, $resources)));
+
+        return $this;
+    }
+
+    /**
+     * @return array<class-string<resource>>
+     */
+    public function getActiveResources(): array
+    {
+        return array_values(array_diff(static::getResources(), $this->excludedResources));
     }
 
     /**
@@ -379,15 +393,6 @@ class LunarPanelManager
 
     public function callHook(string $class, ?object $caller, string $hookName, ...$args): mixed
     {
-        if (isset($this->extensions[$class])) {
-            foreach ($this->extensions[$class] as $extension) {
-                if (method_exists($extension, $hookName)) {
-                    $extension->setCaller($caller);
-                    $args[0] = $extension->{$hookName}(...$args);
-                }
-            }
-        }
-
-        return $args[0];
+        return app(Registry::class)->callHook($class, $caller, $hookName, ...$args);
     }
 }

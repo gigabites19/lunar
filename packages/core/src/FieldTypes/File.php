@@ -1,9 +1,8 @@
 <?php
 
-namespace Lunar\FieldTypes;
+namespace Lunar\Core\FieldTypes;
 
 use JsonSerializable;
-use Lunar\Base\FieldType;
 
 class File implements FieldType, JsonSerializable
 {
@@ -86,6 +85,8 @@ class File implements FieldType, JsonSerializable
                 'multiple' => 'boolean',
                 'max_files' => 'numeric',
                 'min_files' => 'numeric',
+                'disk' => 'string',
+                'directory' => 'string',
             ],
         ];
     }

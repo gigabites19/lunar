@@ -1,17 +1,17 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\AsCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Base\Traits\HasTranslations;
-use Lunar\Database\Factories\AttributeFactory;
-use Lunar\Facades\DB;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Database\Factories\AttributeFactory;
+use Lunar\Core\Facades\DB;
+use Lunar\Core\Models\Concerns\HasMacros;
+use Lunar\Core\Models\Concerns\HasTranslations;
 
 /**
  * @property int $id
@@ -29,10 +29,10 @@ use Lunar\Facades\DB;
  * @property string $validation_rules
  * @property bool $filterable
  * @property bool $searchable
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class Attribute extends BaseModel implements Contracts\Attribute
+class Attribute extends Base implements Contracts\Attribute
 {
     use HasFactory;
     use HasMacros;

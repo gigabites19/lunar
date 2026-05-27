@@ -1,25 +1,24 @@
 <?php
 
 return [
-
     'label' => 'Produto',
-
     'plural_label' => 'Produtos',
-
     'tabs' => [
         'all' => 'Todos',
+        'published' => 'Published',
+        'draft' => 'Draft',
     ],
-
     'status' => [
         'unpublished' => [
-            'content' => 'Atualmente em rascunho, este produto está oculto em todos os canais e grupos de clientes.',
+            'content' => 'Atualmente em rascunho, este produto está indisponível em todos os canais e grupos de clientes.',
         ],
         'availability' => [
             'customer_groups' => 'Este produto está indisponível para todos os grupos de clientes.',
             'channels' => 'Este produto está indisponível para todos os canais.',
+            'hidden_from_guests' => 'Os visitantes atualmente não conseguem ver nem comprar este produto. O grupo de clientes padrão não está habilitado ou visível para ele.',
+            'no_default_customer_group' => 'Nenhum grupo de clientes padrão foi definido, então a visibilidade para visitantes não pode ser controlada aqui. Marque um grupo de clientes como padrão para gerenciar o acesso de visitantes.',
         ],
     ],
-
     'table' => [
         'status' => [
             'label' => 'Status',
@@ -45,14 +44,12 @@ return [
             'label' => 'Tipo de produto',
         ],
     ],
-
     'actions' => [
         'edit_status' => [
             'label' => 'Atualizar status',
             'heading' => 'Atualizar status',
         ],
     ],
-
     'form' => [
         'name' => [
             'label' => 'Nome',
@@ -88,7 +85,6 @@ return [
             'select_collection' => 'Selecione uma coleção',
         ],
     ],
-
     'pages' => [
         'availability' => [
             'label' => 'Disponibilidade',
@@ -127,5 +123,4 @@ return [
             'label' => 'Associações de produto',
         ],
     ],
-
 ];

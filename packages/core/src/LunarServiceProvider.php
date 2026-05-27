@@ -1,12 +1,12 @@
 <?php
 
-namespace Lunar;
+namespace Lunar\Core;
 
-use Cartalyst\Converter\Laravel\Facades\Converter;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\MigrationsStarted;
 use Illuminate\Database\Events\NoPendingMigrations;
@@ -16,91 +16,94 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use Lunar\Addons\Manifest;
-use Lunar\Base\AttributeManifest;
-use Lunar\Base\AttributeManifestInterface;
-use Lunar\Base\CartLineModifiers;
-use Lunar\Base\CartModifiers;
-use Lunar\Base\CartSessionInterface;
-use Lunar\Base\DiscountManagerInterface;
-use Lunar\Base\FieldTypeManifest;
-use Lunar\Base\FieldTypeManifestInterface;
-use Lunar\Base\ModelManifest;
-use Lunar\Base\ModelManifestInterface;
-use Lunar\Base\OrderModifiers;
-use Lunar\Base\OrderReferenceGenerator;
-use Lunar\Base\OrderReferenceGeneratorInterface;
-use Lunar\Base\PaymentManagerInterface;
-use Lunar\Base\PricingManagerInterface;
-use Lunar\Base\ProvidesTelemetryInsights;
-use Lunar\Base\ShippingManifest;
-use Lunar\Base\ShippingManifestInterface;
-use Lunar\Base\ShippingModifiers;
-use Lunar\Base\StorefrontSessionInterface;
-use Lunar\Base\TaxManagerInterface;
-use Lunar\Base\TelemetryInsights;
-use Lunar\Base\TelemetryService;
-use Lunar\Base\TelemetryServiceInterface;
-use Lunar\Console\Commands\AddonsDiscover;
-use Lunar\Console\Commands\Import\AddressData;
-use Lunar\Console\Commands\MigrateGetCandy;
-use Lunar\Console\Commands\Orders\SyncNewCustomerOrders;
-use Lunar\Console\Commands\PruneCarts;
-use Lunar\Console\Commands\ScoutIndexerCommand;
-use Lunar\Console\InstallLunar;
-use Lunar\Database\State\ConvertBackOrderPurchasability;
-use Lunar\Database\State\ConvertProductTypeAttributesToProducts;
-use Lunar\Database\State\ConvertTaxbreakdown;
-use Lunar\Database\State\EnsureBrandsAreUpgraded;
-use Lunar\Database\State\EnsureDefaultTaxClassExists;
-use Lunar\Database\State\EnsureMediaCollectionsAreRenamed;
-use Lunar\Database\State\MigrateCartOrderRelationship;
-use Lunar\Database\State\PopulateProductOptionLabelWithName;
-use Lunar\Facades\Telemetry;
-use Lunar\Listeners\CartSessionAuthListener;
-use Lunar\Managers\CartSessionManager;
-use Lunar\Managers\DiscountManager;
-use Lunar\Managers\PaymentManager;
-use Lunar\Managers\PricingManager;
-use Lunar\Managers\StorefrontSessionManager;
-use Lunar\Managers\TaxManager;
-use Lunar\Models\Address;
-use Lunar\Models\CartLine;
-use Lunar\Models\Channel;
-use Lunar\Models\Collection;
-use Lunar\Models\Currency;
-use Lunar\Models\Customer;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Discount;
-use Lunar\Models\Language;
-use Lunar\Models\Order;
-use Lunar\Models\OrderLine;
-use Lunar\Models\Price;
-use Lunar\Models\Product;
-use Lunar\Models\ProductOption;
-use Lunar\Models\ProductOptionValue;
-use Lunar\Models\ProductVariant;
-use Lunar\Models\Transaction;
-use Lunar\Models\Url;
-use Lunar\Observers\AddressObserver;
-use Lunar\Observers\CartLineObserver;
-use Lunar\Observers\ChannelObserver;
-use Lunar\Observers\CollectionObserver;
-use Lunar\Observers\CurrencyObserver;
-use Lunar\Observers\CustomerGroupObserver;
-use Lunar\Observers\CustomerObserver;
-use Lunar\Observers\DiscountObserver;
-use Lunar\Observers\LanguageObserver;
-use Lunar\Observers\MediaObserver;
-use Lunar\Observers\OrderLineObserver;
-use Lunar\Observers\OrderObserver;
-use Lunar\Observers\PriceObserver;
-use Lunar\Observers\ProductObserver;
-use Lunar\Observers\ProductOptionObserver;
-use Lunar\Observers\ProductOptionValueObserver;
-use Lunar\Observers\ProductVariantObserver;
-use Lunar\Observers\TransactionObserver;
-use Lunar\Observers\UrlObserver;
+use Lunar\Core\Addons\Manifest;
+use Lunar\Core\Auth\Manifest as AccessControlManifest;
+use Lunar\Core\Console\Commands\AddonsDiscover;
+use Lunar\Core\Console\Commands\Import\AddressData;
+use Lunar\Core\Console\Commands\MigrateGetCandy;
+use Lunar\Core\Console\Commands\Orders\SyncNewCustomerOrders;
+use Lunar\Core\Console\Commands\PruneCarts;
+use Lunar\Core\Console\Commands\ScoutIndexerCommand;
+use Lunar\Core\Console\InstallLunar;
+use Lunar\Core\Contracts\AttributeManifest;
+use Lunar\Core\Contracts\CartSession;
+use Lunar\Core\Contracts\CouponValidator;
+use Lunar\Core\Contracts\DiscountManager;
+use Lunar\Core\Contracts\FieldTypeManifest;
+use Lunar\Core\Contracts\ModelManifest;
+use Lunar\Core\Contracts\OrderReferenceGenerator;
+use Lunar\Core\Contracts\PaymentManager;
+use Lunar\Core\Contracts\PricingManager;
+use Lunar\Core\Contracts\ProvidesTelemetryInsights;
+use Lunar\Core\Contracts\ShippingManifest;
+use Lunar\Core\Contracts\StorefrontSession;
+use Lunar\Core\Contracts\TaxManager;
+use Lunar\Core\Contracts\TelemetryService;
+use Lunar\Core\Database\State\EnsureBaseRolesAndPermissions;
+use Lunar\Core\Facades\Converter;
+use Lunar\Core\Facades\Telemetry;
+use Lunar\Core\FieldTypes\Manifest as FieldTypeManifestImpl;
+use Lunar\Core\Listeners\CartSessionAuthListener;
+use Lunar\Core\Managers\CartSessionManager;
+use Lunar\Core\Managers\DiscountManager as DiscountManagerImpl;
+use Lunar\Core\Managers\PaymentManager as PaymentManagerImpl;
+use Lunar\Core\Managers\PricingManager as PricingManagerImpl;
+use Lunar\Core\Managers\StorefrontSessionManager;
+use Lunar\Core\Managers\TaxManager as TaxManagerImpl;
+use Lunar\Core\Manifests\AttributeManifest as AttributeManifestImpl;
+use Lunar\Core\Manifests\ModelManifest as ModelManifestImpl;
+use Lunar\Core\Manifests\ShippingManifest as ShippingManifestImpl;
+use Lunar\Core\Models\Address;
+use Lunar\Core\Models\CartLine;
+use Lunar\Core\Models\Channel;
+use Lunar\Core\Models\Collection;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Customer;
+use Lunar\Core\Models\CustomerGroup;
+use Lunar\Core\Models\Discount;
+use Lunar\Core\Models\Language;
+use Lunar\Core\Models\Order;
+use Lunar\Core\Models\OrderLine;
+use Lunar\Core\Models\Price;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductOption;
+use Lunar\Core\Models\ProductOptionValue;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Core\Models\Staff;
+use Lunar\Core\Models\Transaction;
+use Lunar\Core\Models\Url;
+use Lunar\Core\Modifiers\CartLineModifiers;
+use Lunar\Core\Modifiers\CartModifiers;
+use Lunar\Core\Modifiers\OrderModifiers;
+use Lunar\Core\Modifiers\ShippingModifiers;
+use Lunar\Core\Observers\AddressObserver;
+use Lunar\Core\Observers\CartLineObserver;
+use Lunar\Core\Observers\ChannelObserver;
+use Lunar\Core\Observers\CollectionObserver;
+use Lunar\Core\Observers\CurrencyObserver;
+use Lunar\Core\Observers\CustomerGroupObserver;
+use Lunar\Core\Observers\CustomerObserver;
+use Lunar\Core\Observers\DiscountObserver;
+use Lunar\Core\Observers\LanguageObserver;
+use Lunar\Core\Observers\MediaObserver;
+use Lunar\Core\Observers\OrderLineObserver;
+use Lunar\Core\Observers\OrderObserver;
+use Lunar\Core\Observers\PriceObserver;
+use Lunar\Core\Observers\ProductObserver;
+use Lunar\Core\Observers\ProductOptionObserver;
+use Lunar\Core\Observers\ProductOptionValueObserver;
+use Lunar\Core\Observers\ProductVariantObserver;
+use Lunar\Core\Observers\TransactionObserver;
+use Lunar\Core\Observers\UrlObserver;
+use Lunar\Core\Orders\ReferenceGenerator as OrderReferenceGeneratorImpl;
+use Lunar\Core\Pricing\DefaultPriceCalculator;
+use Lunar\Core\Pricing\DefaultPriceFormatter;
+use Lunar\Core\Pricing\PriceCalculatorInterface;
+use Lunar\Core\Pricing\PriceFormatterInterface;
+use Lunar\Core\Telemetry\Insights as TelemetryInsights;
+use Lunar\Core\Telemetry\TelemetryService as TelemetryServiceImpl;
+use Lunar\Core\Utils\MeasurementConverter;
+use Lunar\Core\Validation\CouponValidator as CouponValidatorImpl;
 
 class LunarServiceProvider extends ServiceProvider
 {
@@ -116,6 +119,7 @@ class LunarServiceProvider extends ServiceProvider
         'products',
         'search',
         'shipping',
+        'staff',
         'taxes',
         'urls',
     ];
@@ -135,73 +139,10 @@ class LunarServiceProvider extends ServiceProvider
 
         $this->registerAddonManifest();
 
-        $this->app->singleton(CartModifiers::class, function () {
-            return new CartModifiers;
-        });
+        $this->registerServices();
+        $this->registerManagers();
 
-        $this->app->singleton(CartLineModifiers::class, function () {
-            return new CartLineModifiers;
-        });
-
-        $this->app->singleton(OrderModifiers::class, function () {
-            return new OrderModifiers;
-        });
-
-        $this->app->singleton(CartSessionInterface::class, function ($app) {
-            return $app->make(CartSessionManager::class);
-        });
-
-        $this->app->singleton(StorefrontSessionInterface::class, function ($app) {
-            return $app->make(StorefrontSessionManager::class);
-        });
-
-        $this->app->singleton(ShippingModifiers::class, function ($app) {
-            return new ShippingModifiers;
-        });
-
-        $this->app->singleton(ShippingManifestInterface::class, function ($app) {
-            return $app->make(ShippingManifest::class);
-        });
-
-        $this->app->singleton(OrderReferenceGeneratorInterface::class, function ($app) {
-            return $app->make(OrderReferenceGenerator::class);
-        });
-
-        $this->app->singleton(AttributeManifestInterface::class, function ($app) {
-            return $app->make(AttributeManifest::class);
-        });
-
-        $this->app->singleton(FieldTypeManifestInterface::class, function ($app) {
-            return $app->make(FieldTypeManifest::class);
-        });
-
-        $this->app->singleton(ModelManifestInterface::class, function ($app) {
-            return $app->make(ModelManifest::class);
-        });
-
-        $this->app->bind(PricingManagerInterface::class, function ($app) {
-            return $app->make(PricingManager::class);
-        });
-
-        $this->app->singleton(TaxManagerInterface::class, function ($app) {
-            return $app->make(TaxManager::class);
-        });
-
-        $this->app->singleton(PaymentManagerInterface::class, function ($app) {
-            return $app->make(PaymentManager::class);
-        });
-
-        $this->app->singleton(DiscountManagerInterface::class, function ($app) {
-            return $app->make(DiscountManager::class);
-        });
-
-        $this->app->singleton(ProvidesTelemetryInsights::class, function ($app) {
-            return $app->make(TelemetryInsights::class);
-        });
-
-        $this->app->singleton(TelemetryServiceInterface::class, function ($app) {
-            return $app->make(TelemetryService::class);
-        });
+        $this->app->register(ActionServiceProvider::class);
 
         $this->app->terminating(function () {
             if (! app()->runningInConsole()) {
@@ -209,7 +150,13 @@ class LunarServiceProvider extends ServiceProvider
             }
         });
 
-        \Lunar\Facades\ModelManifest::register();
+        Facades\ModelManifest::register();
+
+        $this->app->scoped('lunar-access-control', function (): AccessControlManifest {
+            return new AccessControlManifest;
+        });
+
+        $this->app->alias('lunar-access-control', AccessControlManifest::class);
     }
 
     /**
@@ -224,9 +171,8 @@ class LunarServiceProvider extends ServiceProvider
         $this->registerObservers();
         $this->registerBuilderMacros();
         $this->registerBlueprintMacros();
-        $this->registerStateListeners();
 
-        \Lunar\Facades\ModelManifest::morphMap();
+        Facades\ModelManifest::morphMap();
 
         if ($this->app->runningInConsole()) {
             collect($this->configFiles)->each(function ($config) {
@@ -260,7 +206,7 @@ class LunarServiceProvider extends ServiceProvider
             }
         }
 
-        Arr::macro('permutate', [\Lunar\Utils\Arr::class, 'permutate']);
+        Arr::macro('permutate', [Utils\Arr::class, 'permutate']);
 
         // Handle generator
         Str::macro('handle', function ($string) {
@@ -280,28 +226,46 @@ class LunarServiceProvider extends ServiceProvider
             Logout::class,
             [CartSessionAuthListener::class, 'logout']
         );
+
+        $this->registerStaffAuthGuard();
+        $this->registerStaffStateListeners();
+
+        Relation::morphMap([
+            'staff' => config('lunar.staff.model', Staff::class),
+        ]);
     }
 
-    protected function registerAddonManifest()
+    /**
+     * Register the staff auth guard + provider.
+     */
+    protected function registerStaffAuthGuard(): void
     {
-        $this->app->instance(Manifest::class, new Manifest(
-            new Filesystem,
-            $this->app->basePath(),
-            $this->app->bootstrapPath().'/cache/lunar_addons.php'
-        ));
+        if (! config('lunar.staff.register_guard', true)) {
+            return;
+        }
+
+        $provider = config('lunar.staff.provider', 'staff');
+        $guard = config('lunar.staff.guard', 'staff');
+        $model = config('lunar.staff.model', Staff::class);
+
+        $this->app['config']->set("auth.providers.{$provider}", [
+            'driver' => 'eloquent',
+            'model' => $model,
+        ]);
+
+        $this->app['config']->set("auth.guards.{$guard}", [
+            'driver' => 'session',
+            'provider' => $provider,
+        ]);
     }
 
-    protected function registerStateListeners()
+    /**
+     * Register state listeners (e.g. base roles and permissions).
+     */
+    protected function registerStaffStateListeners(): void
     {
         $states = [
-            ConvertProductTypeAttributesToProducts::class,
-            EnsureDefaultTaxClassExists::class,
-            EnsureBrandsAreUpgraded::class,
-            EnsureMediaCollectionsAreRenamed::class,
-            PopulateProductOptionLabelWithName::class,
-            MigrateCartOrderRelationship::class,
-            ConvertTaxbreakdown::class,
-            ConvertBackOrderPurchasability::class,
+            EnsureBaseRolesAndPermissions::class,
         ];
 
         foreach ($states as $state) {
@@ -317,6 +281,109 @@ class LunarServiceProvider extends ServiceProvider
                 [$class, 'run']
             );
         }
+    }
+
+    /**
+     * Bind the stateless services, manifests, registries and value helpers.
+     */
+    protected function registerServices(): void
+    {
+        $this->app->singleton(MeasurementConverter::class, function () {
+            return new MeasurementConverter;
+        });
+
+        $this->app->singleton(CartModifiers::class, function () {
+            return new CartModifiers;
+        });
+
+        $this->app->singleton(CartLineModifiers::class, function () {
+            return new CartLineModifiers;
+        });
+
+        $this->app->singleton(OrderModifiers::class, function () {
+            return new OrderModifiers;
+        });
+
+        $this->app->singleton(ShippingModifiers::class, function () {
+            return new ShippingModifiers;
+        });
+
+        $this->app->singleton(ShippingManifest::class, function ($app) {
+            return $app->make(ShippingManifestImpl::class);
+        });
+
+        $this->app->singleton(AttributeManifest::class, function ($app) {
+            return $app->make(AttributeManifestImpl::class);
+        });
+
+        $this->app->singleton(FieldTypeManifest::class, function ($app) {
+            return $app->make(FieldTypeManifestImpl::class);
+        });
+
+        $this->app->singleton(ModelManifest::class, function ($app) {
+            return $app->make(ModelManifestImpl::class);
+        });
+
+        $this->app->singleton(OrderReferenceGenerator::class, function ($app) {
+            return $app->make(OrderReferenceGeneratorImpl::class);
+        });
+
+        $this->app->bind(PriceFormatterInterface::class, function ($app, array $parameters = []) {
+            $concrete = config('lunar.pricing.formatter', DefaultPriceFormatter::class);
+
+            return $app->make($concrete, $parameters);
+        });
+
+        $this->app->singleton(PriceCalculatorInterface::class, DefaultPriceCalculator::class);
+
+        $this->app->bind(CouponValidator::class, CouponValidatorImpl::class);
+
+        $this->app->singleton(ProvidesTelemetryInsights::class, function ($app) {
+            return $app->make(TelemetryInsights::class);
+        });
+
+        $this->app->singleton(TelemetryService::class, function ($app) {
+            return $app->make(TelemetryServiceImpl::class);
+        });
+    }
+
+    /**
+     * Bind the manager contracts to their default implementations.
+     */
+    protected function registerManagers(): void
+    {
+        $this->app->singleton(CartSession::class, function ($app) {
+            return $app->make(CartSessionManager::class);
+        });
+
+        $this->app->singleton(StorefrontSession::class, function ($app) {
+            return $app->make(StorefrontSessionManager::class);
+        });
+
+        $this->app->bind(PricingManager::class, function ($app) {
+            return $app->make(PricingManagerImpl::class);
+        });
+
+        $this->app->singleton(TaxManager::class, function ($app) {
+            return $app->make(TaxManagerImpl::class);
+        });
+
+        $this->app->singleton(PaymentManager::class, function ($app) {
+            return $app->make(PaymentManagerImpl::class);
+        });
+
+        $this->app->singleton(DiscountManager::class, function ($app) {
+            return $app->make(DiscountManagerImpl::class);
+        });
+    }
+
+    protected function registerAddonManifest()
+    {
+        $this->app->instance(Manifest::class, new Manifest(
+            new Filesystem,
+            $this->app->basePath(),
+            $this->app->bootstrapPath().'/cache/lunar_addons.php'
+        ));
     }
 
     /**
@@ -350,11 +417,11 @@ class LunarServiceProvider extends ServiceProvider
 
     protected function registerBuilderMacros(): void
     {
-        Builder::macro('orderBySequence', function (array $ids) {
+        Builder::macro('orderBySequence', function (iterable $ids) {
             /** @var Builder $this */
             $driver = $this->getConnection()->getDriverName();
 
-            if (empty($ids)) {
+            if (blank($ids)) {
                 return $this;
             }
 
@@ -392,9 +459,15 @@ class LunarServiceProvider extends ServiceProvider
         Blueprint::macro('dimensions', function () {
             /** @var Blueprint $this */
             $columns = ['length', 'width', 'height', 'weight', 'volume'];
+            $unitDefaults = [
+                'weight' => 'kg',
+            ];
+
             foreach ($columns as $column) {
                 $this->decimal("{$column}_value", 10, 4)->default(0)->nullable()->index();
-                $this->string("{$column}_unit")->default('mm')->nullable();
+                $this->string("{$column}_unit")
+                    ->default($unitDefaults[$column] ?? 'mm')
+                    ->nullable();
             }
         });
 

@@ -1,22 +1,22 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Base\Traits\LogsActivity;
-use Lunar\Database\Factories\CollectionGroupFactory;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Database\Factories\CollectionGroupFactory;
+use Lunar\Core\Models\Concerns\HasMacros;
+use Lunar\Core\Models\Concerns\LogsActivity;
 
 /**
  * @property int $id
  * @property string $name
  * @property string $handle
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class CollectionGroup extends BaseModel implements Contracts\CollectionGroup
+class CollectionGroup extends Base implements Contracts\CollectionGroup
 {
     use HasFactory;
     use HasMacros;

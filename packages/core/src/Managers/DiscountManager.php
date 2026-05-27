@@ -1,23 +1,22 @@
 <?php
 
-namespace Lunar\Managers;
+namespace Lunar\Core\Managers;
 
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
-use Lunar\Base\DataTransferObjects\CartDiscount;
-use Lunar\Base\DiscountManagerInterface;
-use Lunar\Base\Validation\CouponValidator;
-use Lunar\DiscountTypes\AmountOff;
-use Lunar\DiscountTypes\BuyXGetY;
-use Lunar\Models\Cart;
-use Lunar\Models\Channel;
-use Lunar\Models\Contracts\Cart as CartContract;
-use Lunar\Models\Contracts\Channel as ChannelContract;
-use Lunar\Models\Contracts\CustomerGroup as CustomerGroupContract;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Discount;
+use Lunar\Core\Contracts\CouponValidator;
+use Lunar\Core\Contracts\DiscountManager as DiscountManagerContract;
+use Lunar\Core\DataObjects\CartDiscount;
+use Lunar\Core\DiscountTypes\AmountOff;
+use Lunar\Core\DiscountTypes\BuyXGetY;
+use Lunar\Core\Models\Channel;
+use Lunar\Core\Models\Contracts\Cart as CartContract;
+use Lunar\Core\Models\Contracts\Channel as ChannelContract;
+use Lunar\Core\Models\Contracts\CustomerGroup as CustomerGroupContract;
+use Lunar\Core\Models\CustomerGroup;
+use Lunar\Core\Models\Discount;
 
-class DiscountManager implements DiscountManagerInterface
+class DiscountManager implements DiscountManagerContract
 {
     /**
      * The current channels.
@@ -56,8 +55,9 @@ class DiscountManager implements DiscountManagerInterface
     /**
      * Instantiate the class.
      */
-    public function __construct()
-    {
+    public function __construct(
+        protected CouponValidator $couponValidator,
+    ) {
         $this->applied = collect();
         $this->channels = collect();
         $this->customerGroups = collect();
@@ -119,7 +119,7 @@ class DiscountManager implements DiscountManagerInterface
     /**
      * Returns the available discounts.
      */
-    public function getDiscounts(?Cart $cart = null): Collection
+    public function getDiscounts(?CartContract $cart = null): Collection
     {
         if ($this->channels->isEmpty() && $defaultChannel = Channel::getDefault()) {
             $this->channel($defaultChannel);
@@ -225,6 +225,14 @@ class DiscountManager implements DiscountManagerInterface
 
         foreach ($this->discounts as $discount) {
             $cart = $discount->getType()->apply($cart);
+
+            $wasApplied = (bool) $cart->discounts?->contains(
+                fn ($applied) => $applied->discount->is($discount)
+            );
+
+            if ($wasApplied && $discount->stop) {
+                break;
+            }
         }
 
         return $cart;
@@ -239,8 +247,6 @@ class DiscountManager implements DiscountManagerInterface
 
     public function validateCoupon(string $coupon): bool
     {
-        return app(
-            config('lunar.discounts.coupon_validator', CouponValidator::class)
-        )->validate($coupon);
+        return $this->couponValidator->validate($coupon);
     }
 }

@@ -4,9 +4,10 @@ use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 use Lunar\Admin\Filament\Resources\StaffResource;
 use Lunar\Admin\Filament\Resources\StaffResource\Pages\CreateStaff;
-use Lunar\Admin\Models\Staff;
+use Lunar\Core\Models\Staff;
+use Lunar\Tests\Admin\Feature\Filament\TestCase;
 
-uses(\Lunar\Tests\Admin\Feature\Filament\TestCase::class)
+uses(TestCase::class)
     ->group('resource.staff');
 
 beforeEach(fn () => $this->asStaff(admin: true));

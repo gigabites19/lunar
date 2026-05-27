@@ -1,19 +1,19 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Lunar\Base\Addressable;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Traits\CachesProperties;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Base\Traits\LogsActivity;
-use Lunar\Base\ValueObjects\Cart\TaxBreakdown;
-use Lunar\Database\Factories\CartAddressFactory;
-use Lunar\DataTypes\Price;
-use Lunar\DataTypes\ShippingOption;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Contracts\Addressable;
+use Lunar\Core\Database\Factories\CartAddressFactory;
+use Lunar\Core\DataObjects\PriceValue;
+use Lunar\Core\DataTypes\ShippingOption;
+use Lunar\Core\Models\Concerns\CachesProperties;
+use Lunar\Core\Models\Concerns\HasMacros;
+use Lunar\Core\Models\Concerns\LogsActivity;
+use Lunar\Core\ValueObjects\Cart\TaxBreakdown;
 
 /**
  * @property int $id
@@ -36,10 +36,10 @@ use Lunar\DataTypes\ShippingOption;
  * @property string $type
  * @property ?string $shipping_option
  * @property array $meta
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class CartAddress extends BaseModel implements Addressable, Contracts\CartAddress
+class CartAddress extends Base implements Addressable, Contracts\CartAddress
 {
     use CachesProperties;
     use HasFactory;
@@ -67,17 +67,17 @@ class CartAddress extends BaseModel implements Addressable, Contracts\CartAddres
     /**
      * The shipping sub total.
      */
-    public ?Price $shippingSubTotal = null;
+    public ?PriceValue $shippingSubTotal = null;
 
     /**
      * The shipping tax total.
      */
-    public ?Price $shippingTaxTotal = null;
+    public ?PriceValue $shippingTaxTotal = null;
 
     /**
      * The shipping total.
      */
-    public ?Price $shippingTotal = null;
+    public ?PriceValue $shippingTotal = null;
 
     /**
      * The tax breakdown.

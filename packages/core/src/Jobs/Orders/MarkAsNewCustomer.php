@@ -1,15 +1,17 @@
 <?php
 
-namespace Lunar\Jobs\Orders;
+namespace Lunar\Core\Jobs\Orders;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Lunar\Facades\DB;
-use Lunar\Models\Order;
-use Lunar\Models\OrderAddress;
+use Illuminate\Support\Collection;
+use Lunar\Core\Facades\DB;
+use Lunar\Core\Models\Order;
+use Lunar\Core\Models\OrderAddress;
 
 class MarkAsNewCustomer implements ShouldQueue
 {
@@ -23,15 +25,15 @@ class MarkAsNewCustomer implements ShouldQueue
     /**
      * The product instance.
      *
-     * @var \Illuminate\Database\Eloquent\Model
+     * @var Model
      */
     protected $orderId;
 
     /**
      * Create a new job instance.
      *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @param  \Illuminate\Support\Collection  $tags
+     * @param  Model  $model
+     * @param  Collection  $tags
      * @return void
      */
     public function __construct($orderId)

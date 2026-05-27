@@ -1,14 +1,17 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
-use Lunar\Base\Casts\TaxBreakdown as TaxBreakdownCasts;
-use Lunar\Base\ValueObjects\Cart\TaxBreakdown;
-use Lunar\Base\ValueObjects\Cart\TaxBreakdownAmount;
-use Lunar\DataTypes\Price;
-use Lunar\Models\Currency;
-use Lunar\Models\Order;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\Casts\TaxBreakdown as TaxBreakdownCasts;
+use Lunar\Core\DataObjects\PriceValue;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Order;
+use Lunar\Core\ValueObjects\Cart\TaxBreakdown;
+use Lunar\Core\ValueObjects\Cart\TaxBreakdownAmount;
+use Lunar\Tests\Core\TestCase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(TestCase::class);
+
+uses(RefreshDatabase::class);
 
 test('can set from value object', function () {
     $currency = Currency::factory()->create();
@@ -18,7 +21,7 @@ test('can set from value object', function () {
 
     $taxBreakdownValueObject->addAmount(
         new TaxBreakdownAmount(
-            price: new Price(100, $currency),
+            price: new PriceValue(100, $currency),
             identifier: 'TAX_AMOUNT_1',
             description: 'Test Tax Breakdown Amount',
             percentage: 20
@@ -41,7 +44,7 @@ test('can cast to and from model', function () {
 
     $taxBreakdownValueObject->addAmount(
         new TaxBreakdownAmount(
-            price: new Price(100, $currency),
+            price: new PriceValue(100, $currency),
             identifier: 'TAX_AMOUNT_1',
             description: 'Test Tax Breakdown Amount',
             percentage: 20

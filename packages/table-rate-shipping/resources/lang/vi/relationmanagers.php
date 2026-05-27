@@ -39,6 +39,7 @@ return [
                     ],
                     'min_weight' => [
                         'label' => 'K.lượng T.thiểu',
+                        'helper_text' => 'Nhập trọng lượng theo kilôgam',
                     ],
                     'price' => [
                         'label' => 'Giá',
@@ -47,8 +48,15 @@ return [
             ],
         ],
         'table' => [
+            'enabled' => [
+                'label' => 'Enabled',
+            ],
+            'disabled' => [
+                'label' => 'disabled',
+            ],
             'shipping_method' => [
                 'label' => 'Phương thức vận chuyển',
+                'disabled' => 'Disabled',
             ],
             'price' => [
                 'label' => 'Giá',

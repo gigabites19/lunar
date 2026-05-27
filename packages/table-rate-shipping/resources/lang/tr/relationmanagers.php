@@ -39,6 +39,7 @@ return [
                     ],
                     'min_weight' => [
                         'label' => 'Min. Ağırlık',
+                        'helper_text' => 'Ağırlığı kilogram olarak girin',
                     ],
                     'price' => [
                         'label' => 'Fiyat',
@@ -47,8 +48,15 @@ return [
             ],
         ],
         'table' => [
+            'enabled' => [
+                'label' => 'Enabled',
+            ],
+            'disabled' => [
+                'label' => 'disabled',
+            ],
             'shipping_method' => [
                 'label' => 'Kargo Yöntemi',
+                'disabled' => 'Disabled',
             ],
             'price' => [
                 'label' => 'Fiyat',

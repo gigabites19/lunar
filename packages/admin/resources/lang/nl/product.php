@@ -1,25 +1,24 @@
 <?php
 
 return [
-
     'label' => 'Product',
-
     'plural_label' => 'Producten',
-
     'tabs' => [
         'all' => 'Allemaal',
+        'published' => 'Published',
+        'draft' => 'Draft',
     ],
-
     'status' => [
         'unpublished' => [
-            'content' => 'Momenteel in conceptstatus, dit product is verborgen op alle kanalen en klantgroepen.',
+            'content' => 'Momenteel in conceptstatus, dit product is niet beschikbaar op alle kanalen en klantgroepen.',
         ],
         'availability' => [
             'customer_groups' => 'Dit product is momenteel niet beschikbaar voor alle klantgroepen.',
             'channels' => 'Dit product is momenteel niet beschikbaar voor alle kanalen.',
+            'hidden_from_guests' => 'Gasten kunnen dit product op dit moment niet zien of kopen. De standaard klantgroep is er niet voor ingeschakeld of zichtbaar.',
+            'no_default_customer_group' => 'Er is geen standaard klantgroep ingesteld, dus de zichtbaarheid voor gasten kan hier niet worden geregeld. Markeer een klantgroep als standaard om de toegang voor gasten te beheren.',
         ],
     ],
-
     'table' => [
         'status' => [
             'label' => 'Status',
@@ -45,14 +44,12 @@ return [
             'label' => 'Producttype',
         ],
     ],
-
     'actions' => [
         'edit_status' => [
             'label' => 'Status Bijwerken',
             'heading' => 'Status Bijwerken',
         ],
     ],
-
     'form' => [
         'name' => [
             'label' => 'Naam',
@@ -81,15 +78,19 @@ return [
         ],
         'tags' => [
             'label' => 'Tags',
+            'helper_text' => 'Separate tags by pressing Enter, Tab or comma (,)',
         ],
         'collections' => [
             'label' => 'Collecties',
+            'select_collection' => 'Select a collection',
         ],
     ],
-
     'pages' => [
         'availability' => [
             'label' => 'Beschikbaarheid',
+        ],
+        'edit' => [
+            'title' => 'Basic Information',
         ],
         'identifiers' => [
             'label' => 'Product Identificatoren',
@@ -122,5 +123,4 @@ return [
             'label' => 'Productassociaties',
         ],
     ],
-
 ];

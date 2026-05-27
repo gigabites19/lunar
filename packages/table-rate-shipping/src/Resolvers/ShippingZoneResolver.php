@@ -3,10 +3,10 @@
 namespace Lunar\Shipping\Resolvers;
 
 use Illuminate\Support\Collection;
-use Lunar\Models\Contracts\Country as CountryContract;
-use Lunar\Models\Contracts\State as StateContract;
-use Lunar\Models\Country;
-use Lunar\Models\State;
+use Lunar\Core\Models\Contracts\Country as CountryContract;
+use Lunar\Core\Models\Contracts\State as StateContract;
+use Lunar\Core\Models\Country;
+use Lunar\Core\Models\State;
 use Lunar\Shipping\DataTransferObjects\PostcodeLookup;
 use Lunar\Shipping\Models\ShippingZone;
 
@@ -100,10 +100,7 @@ class ShippingZoneResolver
             if ($this->postcodeLookup) {
                 $builder->orWhere(function ($qb) {
                     $qb->whereHas('postcodes', function ($query) {
-                        $postcodeParts = (new PostcodeResolver)->getParts(
-                            $this->postcodeLookup->postcode
-                        );
-                        $query->whereIn('postcode', $postcodeParts);
+                        $query->whereIn('postcode', $this->postcodeLookup->getParts());
                     })->where(function ($qb) {
                         $qb->whereHas('countries', function ($query) {
                             $query->where('country_id', $this->postcodeLookup->country->id);

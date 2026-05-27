@@ -2,7 +2,6 @@
 
 namespace Lunar\Admin\Filament\Resources\ProductVariantResource\Pages;
 
-use Cartalyst\Converter\Laravel\Facades\Converter;
 use Filament\Actions\Action;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -12,6 +11,8 @@ use Illuminate\Database\Eloquent\Model;
 use Lunar\Admin\Filament\Resources\ProductResource;
 use Lunar\Admin\Filament\Resources\ProductVariantResource;
 use Lunar\Admin\Support\Pages\BaseEditRecord;
+use Lunar\Core\Facades\Converter;
+use Lunar\Filament\Schemas\ProductVariant\ProductVariantForm;
 
 class ManageVariantShipping extends BaseEditRecord
 {
@@ -116,11 +117,11 @@ class ManageVariantShipping extends BaseEditRecord
     {
         return $schema->components([
             Section::make()->schema([
-                ProductVariantResource::getShippableFormComponent(),
-                ProductVariantResource::getLengthFormComponent(),
-                ProductVariantResource::getWidthFormComponent(),
-                ProductVariantResource::getHeightFormComponent(),
-                ProductVariantResource::getWeightFormComponent(),
+                ProductVariantForm::getShippableComponent(),
+                ProductVariantForm::getLengthComponent(),
+                ProductVariantForm::getWidthComponent(),
+                ProductVariantForm::getHeightComponent(),
+                ProductVariantForm::getWeightComponent(),
             ])->columns([
                 'sm' => 1,
                 'xl' => 2,

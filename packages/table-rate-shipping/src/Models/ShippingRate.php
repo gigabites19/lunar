@@ -6,18 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Purchasable;
-use Lunar\Base\Traits\HasPrices;
-use Lunar\Base\Traits\LogsActivity;
-use Lunar\DataTypes\ShippingOption;
-use Lunar\Models\Contracts\Cart as CartContract;
-use Lunar\Models\Contracts\TaxClass as TaxClassContract;
-use Lunar\Models\TaxClass;
+use Lunar\Core\Contracts\Purchasable;
+use Lunar\Core\DataTypes\ShippingOption;
+use Lunar\Core\Models\Base;
+use Lunar\Core\Models\Concerns\HasPrices;
+use Lunar\Core\Models\Concerns\LogsActivity;
+use Lunar\Core\Models\Contracts\Cart as CartContract;
+use Lunar\Core\Models\Contracts\TaxClass as TaxClassContract;
+use Lunar\Core\Models\TaxClass;
 use Lunar\Shipping\Database\Factories\ShippingRateFactory;
 use Lunar\Shipping\DataTransferObjects\ShippingOptionRequest;
 
-class ShippingRate extends BaseModel implements Contracts\ShippingRate, Purchasable
+class ShippingRate extends Base implements Contracts\ShippingRate, Purchasable
 {
     use HasFactory;
     use HasPrices;
@@ -62,6 +62,8 @@ class ShippingRate extends BaseModel implements Contracts\ShippingRate, Purchasa
 
     public function getPrices(): Collection
     {
+        $this->loadMissing(['prices.currency', 'prices.priceable']);
+
         return $this->prices;
     }
 
@@ -144,9 +146,15 @@ class ShippingRate extends BaseModel implements Contracts\ShippingRate, Purchasa
      */
     public function getShippingOption(CartContract $cart): ?ShippingOption
     {
-        if (config('lunar.shipping-tables.shipping_rate_tax_calculation') == 'highest') {
+        $calculateBy = config('lunar.shipping-tables.shipping_rate_tax_calculation');
+
+        if (is_callable($calculateBy)) {
+            $this->resolvedTaxClass = call_user_func($calculateBy, $cart);
+        } elseif ($calculateBy == 'highest') {
             $this->resolvedTaxClass = $this->resolveHighestTaxRateInCart($cart);
         }
+
+        $this->loadMissing('shippingMethod');
 
         return $this->shippingMethod->driver()->resolve(
             new ShippingOptionRequest(
@@ -166,10 +174,17 @@ class ShippingRate extends BaseModel implements Contracts\ShippingRate, Purchasa
         return 1;
     }
 
+    public function isPurchasable(): bool
+    {
+        return true;
+    }
+
     private function resolveHighestTaxRateInCart(CartContract $cart): ?TaxClass
     {
         $highestRate = false;
         $highestTaxClass = null;
+
+        $cart->loadMissing('lines.purchasable.taxClass.taxRateAmounts');
 
         foreach ($cart->lines as $cartLine) {
             if ($cartLine->purchasable->taxClass) {

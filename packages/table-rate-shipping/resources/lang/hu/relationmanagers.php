@@ -39,6 +39,7 @@ return [
                     ],
                     'min_weight' => [
                         'label' => 'Min. súly',
+                        'helper_text' => 'Adja meg a súlyt kilogrammban',
                     ],
                     'price' => [
                         'label' => 'Ár',
@@ -47,8 +48,15 @@ return [
             ],
         ],
         'table' => [
+            'enabled' => [
+                'label' => 'Enabled',
+            ],
+            'disabled' => [
+                'label' => 'disabled',
+            ],
             'shipping_method' => [
                 'label' => 'Szállítási mód',
+                'disabled' => 'Disabled',
             ],
             'price' => [
                 'label' => 'Ár',

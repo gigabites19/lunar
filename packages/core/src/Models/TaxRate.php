@@ -1,25 +1,25 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Base\Traits\LogsActivity;
-use Lunar\Database\Factories\TaxRateFactory;
-use Lunar\Facades\DB;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Database\Factories\TaxRateFactory;
+use Lunar\Core\Facades\DB;
+use Lunar\Core\Models\Concerns\HasMacros;
+use Lunar\Core\Models\Concerns\LogsActivity;
 
 /**
  * @property int $id
  * @property ?int $tax_zone_id
  * @property bool $priority
  * @property string $name
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class TaxRate extends BaseModel implements Contracts\TaxRate
+class TaxRate extends Base implements Contracts\TaxRate
 {
     use HasFactory;
     use HasMacros;

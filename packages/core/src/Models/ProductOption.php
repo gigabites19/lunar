@@ -1,19 +1,19 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Base\Traits\HasMedia;
-use Lunar\Base\Traits\HasTranslations;
-use Lunar\Base\Traits\LogsActivity;
-use Lunar\Base\Traits\Searchable;
-use Lunar\Database\Factories\ProductOptionFactory;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Database\Factories\ProductOptionFactory;
+use Lunar\Core\Models\Concerns\HasMacros;
+use Lunar\Core\Models\Concerns\HasMedia;
+use Lunar\Core\Models\Concerns\HasTranslations;
+use Lunar\Core\Models\Concerns\LogsActivity;
+use Lunar\Core\Models\Concerns\Searchable;
 use Spatie\MediaLibrary\HasMedia as SpatieHasMedia;
 
 /**
@@ -24,10 +24,10 @@ use Spatie\MediaLibrary\HasMedia as SpatieHasMedia;
  * @property ?string $handle
  * @property bool $shared
  * @property ?AsArrayObject $meta
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class ProductOption extends BaseModel implements Contracts\ProductOption, SpatieHasMedia
+class ProductOption extends Base implements Contracts\ProductOption, SpatieHasMedia
 {
     use HasFactory;
     use HasMacros;

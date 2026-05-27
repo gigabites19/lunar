@@ -9,11 +9,13 @@ use Filament\Actions\DetachBulkAction;
 use Filament\Forms\Components\Select;
 use Filament\Support\Facades\FilamentIcon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Lunar\Admin\Events\ProductCollectionsUpdated;
 use Lunar\Admin\Filament\Resources\ProductResource;
 use Lunar\Admin\Support\Pages\BaseManageRelatedRecords;
-use Lunar\Admin\Support\Tables\Columns\TranslatedTextColumn;
-use Lunar\Models\Contracts\Collection as CollectionContract;
+use Lunar\Core\Models\Contracts\Collection as CollectionContract;
+use Lunar\Filament\Forms\Components\CollectionSelect;
+use Lunar\Filament\Tables\Columns\TranslatedTextColumn;
 
 class ManageProductCollections extends BaseManageRelatedRecords
 {
@@ -38,9 +40,17 @@ class ManageProductCollections extends BaseManageRelatedRecords
 
     public function table(Table $table): Table
     {
+        return parent::table($table);
+    }
+
+    protected function getDefaultTable(Table $table): Table
+    {
         return $table
             ->recordTitleAttribute('name')
             ->reorderable('position')
+            ->modifyQueryUsing(
+                fn (Builder $query): Builder => $query->with('ancestors')
+            )
             ->columns([
                 TranslatedTextColumn::make('attribute_data.name')
                     ->description(fn (CollectionContract $record): string => $record->breadcrumb->implode(' > '))
@@ -54,19 +64,9 @@ class ManageProductCollections extends BaseManageRelatedRecords
             ])
             ->headerActions([
                 AttachAction::make()
-                    ->recordSelect(
-                        function (Select $select) {
-                            return $select->placeholder(__('lunarpanel::product.pages.collections.select_collection'))
-                                ->getSearchResultsUsing(static function (Select $component, string $search, ManageProductCollections $livewire): array {
-                                    $relationModel = $livewire->getRelationship()->getRelated()::class;
-
-                                    return get_search_builder($relationModel, $search)
-                                        ->get()
-                                        ->mapWithKeys(fn (CollectionContract $record): array => [$record->getKey() => $record->breadcrumb->push($record->translateAttribute('name'))->join(' > ')])
-                                        ->all();
-                                });
-                        }
-                    )->after(
+                    ->recordSelect(fn (Select $select) => CollectionSelect::applyTo($select)
+                        ->placeholder(__('lunarpanel::product.pages.collections.select_collection')))
+                    ->after(
                         fn () => ProductCollectionsUpdated::dispatch(
                             $this->getOwnerRecord()
                         )

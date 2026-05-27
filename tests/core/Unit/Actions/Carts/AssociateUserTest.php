@@ -1,14 +1,17 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
-
-use Lunar\Actions\Carts\AssociateUser;
-use Lunar\Models\Cart;
-use Lunar\Models\Currency;
-use Lunar\Models\Order;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\Actions\Carts\AssociateUser;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Customer;
+use Lunar\Core\Models\Order;
 use Lunar\Tests\Core\Stubs\User;
+use Lunar\Tests\Core\TestCase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(TestCase::class);
+
+uses(RefreshDatabase::class);
 
 test('can associate a user', function () {
     $currency = Currency::factory()->create();
@@ -23,7 +26,7 @@ test('can associate a user', function () {
         'merged_id' => null,
     ]);
 
-    $action = new AssociateUser;
+    $action = app(AssociateUser::class);
 
     $user = User::factory()->create();
     $action->execute($cart, $user);
@@ -48,10 +51,10 @@ test('can associate a user with a customer', function () {
         'merged_id' => null,
     ]);
 
-    $action = new AssociateUser;
+    $action = app(AssociateUser::class);
 
     $user = User::factory()->create();
-    $customer = \Lunar\Models\Customer::factory()->create();
+    $customer = Customer::factory()->create();
     $user->customers()->attach($customer);
 
     $action->execute($cart, $user);
@@ -95,7 +98,7 @@ test('cant associate user to cart with order', function () {
         'merged_id' => null,
     ]);
 
-    $action = new AssociateUser;
+    $action = app(AssociateUser::class);
 
     $action->execute($cart, $user);
 

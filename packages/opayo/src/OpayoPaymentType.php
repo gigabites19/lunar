@@ -2,22 +2,25 @@
 
 namespace Lunar\Opayo;
 
+use Carbon\Carbon;
+use Illuminate\Config\Repository;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Str;
-use Lunar\Base\DataTransferObjects\PaymentCapture;
-use Lunar\Base\DataTransferObjects\PaymentCheck;
-use Lunar\Base\DataTransferObjects\PaymentChecks;
-use Lunar\Base\DataTransferObjects\PaymentRefund;
-use Lunar\Events\PaymentAttemptEvent;
-use Lunar\Models\Contracts\Order as OrderContract;
-use Lunar\Models\Contracts\Transaction as TransactionContract;
-use Lunar\Models\Order;
-use Lunar\Models\Transaction;
+use Lunar\Core\DataObjects\PaymentCapture;
+use Lunar\Core\DataObjects\PaymentCheck;
+use Lunar\Core\DataObjects\PaymentChecks;
+use Lunar\Core\DataObjects\PaymentRefund;
+use Lunar\Core\Events\PaymentAttemptEvent;
+use Lunar\Core\Models\Contracts\Order as OrderContract;
+use Lunar\Core\Models\Contracts\Transaction as TransactionContract;
+use Lunar\Core\Models\Order;
+use Lunar\Core\Models\Transaction;
+use Lunar\Core\PaymentTypes\AbstractPayment;
 use Lunar\Opayo\DataTransferObjects\AuthPayloadParameters;
 use Lunar\Opayo\Facades\Opayo;
 use Lunar\Opayo\Models\OpayoToken;
 use Lunar\Opayo\Responses\PaymentAuthorize;
 use Lunar\Opayo\Responses\ThreeDSecureResponse;
-use Lunar\PaymentTypes\AbstractPayment;
 
 class OpayoPaymentType extends AbstractPayment
 {
@@ -39,7 +42,7 @@ class OpayoPaymentType extends AbstractPayment
     /**
      * Authorize the payment for processing.
      *
-     * @return \Lunar\Base\DataTransferObjects\PaymentAuthorize
+     * @return \Lunar\Core\DataObjects\PaymentAuthorize
      */
     public function authorize(): PaymentAuthorize|ThreeDSecureResponse
     {
@@ -386,7 +389,7 @@ class OpayoPaymentType extends AbstractPayment
             merchantSessionKey: $this->data['merchant_key'],
             cardIdentifier: $this->data['card_identifier'],
             vendorTxCode: Str::random(40),
-            amount: $this->order->total->value,
+            amount: $this->order->total,
             currency: $this->order->currency_code,
             customerFirstName: $billingAddress->first_name,
             customerLastName: $billingAddress->last_name,
@@ -431,7 +434,7 @@ class OpayoPaymentType extends AbstractPayment
     }
 
     /**
-     * @param  \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|\Illuminate\Foundation\Application|mixed|string  $policy
+     * @param  Repository|\Illuminate\Contracts\Foundation\Application|Application|mixed|string  $policy
      */
     public function setPolicy(mixed $policy): void
     {
@@ -528,7 +531,7 @@ class OpayoPaymentType extends AbstractPayment
         $payment->user_id = $this->order->user_id;
         $payment->card_type = strtolower($details->cardType);
         $payment->last_four = $details->lastFourDigits;
-        $payment->expires_at = \Carbon\Carbon::createFromFormat('my', $details->expiryDate)->endOfMonth();
+        $payment->expires_at = Carbon::createFromFormat('my', $details->expiryDate)->endOfMonth();
         $payment->token = $details->cardIdentifier;
         $payment->auth_code = $authCode;
         $payment->save();

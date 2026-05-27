@@ -1,13 +1,13 @@
 <?php
 
-namespace Lunar\Actions\Carts;
+namespace Lunar\Core\Actions\Carts;
 
-use Lunar\Actions\AbstractAction;
-use Lunar\DataTypes\ShippingOption;
-use Lunar\Models\Cart;
-use Lunar\Models\Contracts\Cart as CartContract;
+use Lunar\Core\Contracts\Actions\Carts\SetsShippingOption;
+use Lunar\Core\DataTypes\ShippingOption;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\Contracts\Cart as CartContract;
 
-class SetShippingOption extends AbstractAction
+class SetShippingOption implements SetsShippingOption
 {
     /**
      * Execute the action.
@@ -15,13 +15,11 @@ class SetShippingOption extends AbstractAction
     public function execute(
         CartContract $cart,
         ShippingOption $shippingOption
-    ): self {
+    ): void {
         /** @var Cart $cart */
         $cart->shippingAddress->shippingOption = $shippingOption;
         $cart->shippingAddress->update([
             'shipping_option' => $shippingOption->getIdentifier(),
         ]);
-
-        return $this;
     }
 }

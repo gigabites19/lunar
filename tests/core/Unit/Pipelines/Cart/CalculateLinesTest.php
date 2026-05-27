@@ -1,14 +1,16 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Price;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Core\Pipelines\Cart\CalculateLines;
+use Lunar\Tests\Core\TestCase;
 
-use Lunar\Models\Cart;
-use Lunar\Models\Currency;
-use Lunar\Models\Price;
-use Lunar\Models\ProductVariant;
-use Lunar\Pipelines\Cart\CalculateLines;
+uses(TestCase::class);
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('can calculate lines', function ($expectedUnitPrice, $incomingUnitPrice, $unitQuantity) {
     $currency = Currency::factory()->create();
@@ -41,7 +43,7 @@ test('can calculate lines', function ($expectedUnitPrice, $incomingUnitPrice, $u
 
     $cartLine = $cart->lines->first();
 
-    expect($expectedUnitPrice)->toEqual($cartLine->subTotal->unitDecimal);
+    expect($expectedUnitPrice)->toEqual(number_format($cartLine->subTotal->decimal(), 2, '.', ''));
 })->with('providePurchasableData');
 
 dataset('providePurchasableData', function () {

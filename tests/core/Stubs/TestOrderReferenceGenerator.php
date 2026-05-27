@@ -2,10 +2,10 @@
 
 namespace Lunar\Tests\Core\Stubs;
 
-use Lunar\Base\OrderReferenceGeneratorInterface;
-use Lunar\Models\Contracts\Order;
+use Lunar\Core\Contracts\OrderReferenceGenerator;
+use Lunar\Core\Models\Contracts\Order;
 
-class TestOrderReferenceGenerator implements OrderReferenceGeneratorInterface
+class TestOrderReferenceGenerator implements OrderReferenceGenerator
 {
     /**
      * Called just after cart totals are calculated.

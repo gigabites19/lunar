@@ -3,13 +3,13 @@
 namespace Lunar\Paypal;
 
 use Illuminate\Http\Client\HttpClientException;
-use Lunar\Base\DataTransferObjects\PaymentAuthorize;
-use Lunar\Base\DataTransferObjects\PaymentCapture;
-use Lunar\Base\DataTransferObjects\PaymentRefund;
-use Lunar\Events\PaymentAttemptEvent;
-use Lunar\Models\Contracts\Transaction as TransactionContract;
-use Lunar\Models\Transaction;
-use Lunar\PaymentTypes\AbstractPayment;
+use Lunar\Core\DataObjects\PaymentAuthorize;
+use Lunar\Core\DataObjects\PaymentCapture;
+use Lunar\Core\DataObjects\PaymentRefund;
+use Lunar\Core\Events\PaymentAttemptEvent;
+use Lunar\Core\Models\Contracts\Transaction as TransactionContract;
+use Lunar\Core\Models\Transaction;
+use Lunar\Core\PaymentTypes\AbstractPayment;
 use Lunar\Paypal\Facades\Paypal;
 
 class PaypalPaymentType extends AbstractPayment
@@ -71,7 +71,7 @@ class PaypalPaymentType extends AbstractPayment
         }
 
         if ($paypalOrder['status'] == 'APPROVED') {
-            $paypalOrder = PayPal::capture($paypalOrderId);
+            $paypalOrder = Paypal::capture($paypalOrderId);
 
             if (($paypalOrder['status'] ?? null) != 'COMPLETED') {
                 return $this->failAuthorize();

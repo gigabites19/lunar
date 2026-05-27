@@ -1,16 +1,18 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
-
-use Lunar\FieldTypes\Text;
-use Lunar\FieldTypes\TranslatedText;
-use Lunar\Models\Attribute;
-use Lunar\Models\Customer;
-use Lunar\Models\Language;
-use Lunar\Search\CustomerIndexer;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\FieldTypes\Text;
+use Lunar\Core\FieldTypes\TranslatedText;
+use Lunar\Core\Models\Attribute;
+use Lunar\Core\Models\Customer;
+use Lunar\Core\Models\Language;
+use Lunar\Core\Search\CustomerIndexer;
 use Lunar\Tests\Core\Stubs\User;
+use Lunar\Tests\Core\TestCase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(TestCase::class)->group('search', 'indexer');
+
+uses(RefreshDatabase::class);
 
 test('can return correct searchable data', function () {
     Language::factory()->create([

@@ -23,10 +23,10 @@ use Illuminate\Support\HtmlString;
 use Livewire\Attributes\Computed;
 use Lunar\Admin\Filament\Resources\ProductResource\Pages\EditProduct;
 use Lunar\Admin\Livewire\Components\TableComponent;
-use Lunar\Admin\Support\Concerns\CallsHooks;
-use Lunar\Admin\Support\Tables\Components\KeyValue;
-use Lunar\Models\ProductVariant;
-use Lunar\Models\Transaction;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Core\Models\Transaction;
+use Lunar\Filament\Support\Concerns\CallsHooks;
+use Lunar\Filament\Tables\Components\KeyValue;
 
 /**
  * @property Collection $charges
@@ -70,7 +70,7 @@ class OrderItemsTable extends TableComponent
                         Stack::make([
                             TextColumn::make('unit')
                                 ->alignEnd()
-                                ->getStateUsing(fn ($record) => "{$record->quantity} @ {$record->sub_total->formatted}"),
+                                ->getStateUsing(fn ($record) => "{$record->quantity} @ {$record->format('sub_total')}"),
                         ]),
                     ])
                         ->extraAttributes(['style' => 'align-items: start;']),
@@ -101,16 +101,16 @@ class OrderItemsTable extends TableComponent
 
                             $states = [];
 
-                            $states['unit_price'] = "{$record->unit_price->unitFormatted(decimalPlaces: 4)}";
+                            $states['unit_price'] = $record->format('unit_price', decimalPlaces: 4);
                             $states['quantity'] = $record->quantity;
-                            $states['sub_total'] = $record->sub_total?->formatted;
-                            $states['discount_total'] = $record->discount_total?->formatted;
+                            $states['sub_total'] = $record->format('sub_total');
+                            $states['discount_total'] = $record->format('discount_total');
 
                             foreach ($record->tax_breakdown?->amounts ?? [] as $tax) {
-                                $states[$tax->description] = $tax->price->formatted;
+                                $states[$tax->description] = $tax->price->format();
                             }
 
-                            $states['total'] = $record->total?->formatted;
+                            $states['total'] = $record->format('total');
 
                             return $states;
                         }),
@@ -125,7 +125,7 @@ class OrderItemsTable extends TableComponent
     {
         return $table
             ->query($this->record->lines()->getQuery()
-                ->with(['purchasable'])
+                ->with(['purchasable', 'currency'])
                 ->wherein('type', ['physical', 'digital']))
             ->columns(static::getOrderLinesTableColumns())
             ->toolbarActions([
@@ -151,7 +151,7 @@ class OrderItemsTable extends TableComponent
                     ->default(fn () => $this->charges->first()->id)
                     ->options(fn () => $this->charges
                         ->mapWithKeys(fn ($charge) => [
-                            $charge->id => "{$charge->amount->formatted} - {$charge->driver} // {$charge->reference}",
+                            $charge->id => "{$charge->format('amount')} - {$charge->driver} // {$charge->reference}",
                         ]))
                     ->live(),
 
@@ -159,7 +159,7 @@ class OrderItemsTable extends TableComponent
                     ->required()
                     ->label(__('lunarpanel::order.form.amount.label'))
                     ->suffix(fn () => $this->record->currency->code)
-                    ->default(fn () => number_format($this->record->lines()->whereIn('id', $this->selectedTableRecords)->get()->sum('total.value') / $this->record->currency->factor, $this->record->currency->decimal_places, '.', ''))
+                    ->default(fn () => number_format($this->record->lines()->whereIn('id', $this->selectedTableRecords)->get()->sum('total') / $this->record->currency->factor, $this->record->currency->decimal_places, '.', ''))
                     ->live()
                     ->minValue(
                         1 / $this->record->currency->factor
@@ -224,7 +224,7 @@ class OrderItemsTable extends TableComponent
     #[Computed]
     public function availableToRefund(): float
     {
-        return $this->charges->sum('amount.value') - $this->refunds->sum('amount.value');
+        return $this->charges->sum('amount') - $this->refunds->sum('amount');
     }
 
     #[Computed]

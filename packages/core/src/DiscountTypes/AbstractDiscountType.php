@@ -1,17 +1,17 @@
 <?php
 
-namespace Lunar\DiscountTypes;
+namespace Lunar\Core\DiscountTypes;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Collection;
-use Lunar\Base\DiscountTypeInterface;
-use Lunar\Base\ValueObjects\Cart\DiscountBreakdown;
-use Lunar\Models\Cart;
-use Lunar\Models\Contracts\Cart as CartContract;
-use Lunar\Models\Contracts\Discount as DiscountContract;
-use Lunar\Models\Discount;
+use Lunar\Core\Contracts\DiscountType;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\Contracts\Cart as CartContract;
+use Lunar\Core\Models\Contracts\Discount as DiscountContract;
+use Lunar\Core\Models\Discount;
+use Lunar\Core\ValueObjects\Cart\DiscountBreakdown;
 
-abstract class AbstractDiscountType implements DiscountTypeInterface
+abstract class AbstractDiscountType implements DiscountType
 {
     /**
      * The instance of the discount.
@@ -27,6 +27,16 @@ abstract class AbstractDiscountType implements DiscountTypeInterface
     {
         /** @var Discount $discount */
         $this->discount = $discount;
+
+        $this->discount->loadMissing([
+            'customers',
+            'collections',
+            'brands',
+            'discountableLimitations.discountable',
+            'discountableExclusions.discountable',
+            'discountableConditions.discountable',
+            'discountableRewards.discountable',
+        ]);
 
         return $this;
     }
@@ -63,6 +73,7 @@ abstract class AbstractDiscountType implements DiscountTypeInterface
     protected function checkDiscountConditions(CartContract $cart): bool
     {
         /** @var Cart $cart */
+        $cart->loadMissing('currency');
         $data = $this->discount->data;
 
         $customerIds = $this->discount->customers->pluck('id');
@@ -94,7 +105,7 @@ abstract class AbstractDiscountType implements DiscountTypeInterface
     /**
      * Check if discount's conditions met.
      *
-     * @param  Lunar\Base\ValueObjects\Cart\DiscountBreakdown  $breakdown
+     * @param  Lunar\Core\ValueObjects\Cart\DiscountBreakdown  $breakdown
      * @return self
      */
     protected function addDiscountBreakdown(CartContract $cart, DiscountBreakdown $breakdown)

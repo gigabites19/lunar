@@ -1,19 +1,19 @@
 <?php
 
-namespace Lunar\Actions\Carts;
+namespace Lunar\Core\Actions\Carts;
 
 use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Facades\App;
-use Lunar\Actions\AbstractAction;
-use Lunar\Exceptions\DisallowMultipleCartOrdersException;
-use Lunar\Facades\DB;
-use Lunar\Jobs\Orders\MarkAsNewCustomer;
-use Lunar\Models\Cart;
-use Lunar\Models\Contracts\Cart as CartContract;
-use Lunar\Models\Contracts\Order as OrderContract;
-use Lunar\Models\Order;
+use Lunar\Core\Contracts\Actions\Carts\CreatesOrder;
+use Lunar\Core\Exceptions\DisallowMultipleCartOrdersException;
+use Lunar\Core\Facades\DB;
+use Lunar\Core\Jobs\Orders\MarkAsNewCustomer;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\Contracts\Cart as CartContract;
+use Lunar\Core\Models\Contracts\Order as OrderContract;
+use Lunar\Core\Models\Order;
 
-final class CreateOrder extends AbstractAction
+final class CreateOrder implements CreatesOrder
 {
     /**
      * Execute the action.
@@ -22,8 +22,8 @@ final class CreateOrder extends AbstractAction
         CartContract $cart,
         bool $allowMultipleOrders = false,
         ?int $orderIdToUpdate = null
-    ): self {
-        $this->passThrough = DB::transaction(function () use ($cart, $allowMultipleOrders, $orderIdToUpdate) {
+    ): OrderContract {
+        return DB::transaction(function () use ($cart, $allowMultipleOrders, $orderIdToUpdate) {
             /** @var Order $order */
             /** @var Cart $cart */
             $order = $cart->draftOrder($orderIdToUpdate)->first() ?: App::make(OrderContract::class);
@@ -57,7 +57,5 @@ final class CreateOrder extends AbstractAction
 
             return $order;
         });
-
-        return $this;
     }
 }

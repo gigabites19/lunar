@@ -8,9 +8,9 @@ use Filament\Support\Facades\FilamentIcon;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
 use Lunar\Admin\Filament\Resources\ProductResource;
-use Lunar\Admin\Filament\Resources\ProductVariantResource;
 use Lunar\Admin\Support\Pages\BaseEditRecord;
-use Lunar\Models\Contracts\ProductVariant as ProductVariantContract;
+use Lunar\Core\Models\Contracts\ProductVariant as ProductVariantContract;
+use Lunar\Filament\Schemas\ProductVariant\ProductVariantForm;
 
 class ManageProductIdentifiers extends BaseEditRecord
 {
@@ -36,7 +36,7 @@ class ManageProductIdentifiers extends BaseEditRecord
 
     public static function shouldRegisterNavigation(array $parameters = []): bool
     {
-        return $parameters['record']->variants()->withTrashed()->count() == 1;
+        return ($parameters['record']->variants_count ?? $parameters['record']->variants()->count()) == 1;
     }
 
     public function getBreadcrumb(): string
@@ -78,7 +78,7 @@ class ManageProductIdentifiers extends BaseEditRecord
 
     protected function getVariant(): ProductVariantContract
     {
-        return $this->getRecord()->variants()->withTrashed()->first();
+        return $this->getRecord()->variants()->first();
     }
 
     protected function getFormActions(): array
@@ -94,15 +94,15 @@ class ManageProductIdentifiers extends BaseEditRecord
 
         return $schema->components([
             Section::make()->schema([
-                ProductVariantResource::getSkuFormComponent()
+                ProductVariantForm::getSkuComponent()
                     ->live()->unique(
                         table: fn () => $variant->getTable(),
                         ignorable: $variant,
                         ignoreRecord: true,
                     ),
-                ProductVariantResource::getGtinFormComponent(),
-                ProductVariantResource::getMpnFormComponent(),
-                ProductVariantResource::getEanFormComponent(),
+                ProductVariantForm::getGtinComponent(),
+                ProductVariantForm::getMpnComponent(),
+                ProductVariantForm::getEanComponent(),
             ])->columns(1),
         ])->statePath('');
     }

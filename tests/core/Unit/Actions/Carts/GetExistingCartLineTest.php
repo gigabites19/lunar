@@ -1,15 +1,17 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\Actions\Carts\GetExistingCartLine;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\CartLine;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Price;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Tests\Core\TestCase;
 
-use Lunar\Actions\Carts\GetExistingCartLine;
-use Lunar\Models\Cart;
-use Lunar\Models\CartLine;
-use Lunar\Models\Currency;
-use Lunar\Models\Price;
-use Lunar\Models\ProductVariant;
+uses(TestCase::class);
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('can get basic cart line', function () {
     $currency = Currency::factory()->create();

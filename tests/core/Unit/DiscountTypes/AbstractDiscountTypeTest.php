@@ -1,14 +1,21 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\Channel;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Customer;
+use Lunar\Core\Models\CustomerGroup;
+use Lunar\Core\Models\Discount;
+use Lunar\Core\Models\Price;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Tests\Core\Stubs\TestAbstractDiscount;
+use Lunar\Tests\Core\TestCase;
 
-use Lunar\Models\Cart;
-use Lunar\Models\Channel;
-use Lunar\Models\Currency;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Discount;
+uses(TestCase::class);
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Currency::factory()->create([
@@ -32,7 +39,7 @@ test('will handle customer limitation', function () {
 
     $currency = Currency::getDefault();
 
-    $customer = \Lunar\Models\Customer::factory()->create([]);
+    $customer = Customer::factory()->create([]);
 
     $cart = Cart::factory()->create([
         'channel_id' => $channel->id,
@@ -41,7 +48,7 @@ test('will handle customer limitation', function () {
     ]);
 
     $discountModel = Discount::factory()->create([
-        'type' => \Lunar\Tests\Core\Stubs\TestAbstractDiscount::class,
+        'type' => TestAbstractDiscount::class,
         'name' => 'Test Coupon',
         'coupon' => '10OFF',
         'data' => [
@@ -52,13 +59,13 @@ test('will handle customer limitation', function () {
         ],
     ]);
 
-    $product = \Lunar\Models\Product::factory()->create();
+    $product = Product::factory()->create();
 
-    $purchasable = \Lunar\Models\ProductVariant::factory()->create([
+    $purchasable = ProductVariant::factory()->create([
         'product_id' => $product->id,
     ]);
 
-    \Lunar\Models\Price::factory()->create([
+    Price::factory()->create([
         'price' => 1000, // £10
         'min_quantity' => 1,
         'currency_id' => $currency->id,

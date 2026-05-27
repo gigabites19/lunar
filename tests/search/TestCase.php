@@ -2,17 +2,18 @@
 
 namespace Lunar\Tests\Search;
 
-use Cartalyst\Converter\Laravel\ConverterServiceProvider;
 use Illuminate\Support\Facades\Config;
 use Laravel\Scout\ScoutServiceProvider;
-use Lunar\LunarServiceProvider;
+use Lunar\Core\LunarServiceProvider;
 use Lunar\Search\SearchServiceProvider;
 use Lunar\Stripe\Facades\Stripe;
 use Lunar\Tests\Stubs\User;
+use Lunar\Tests\TestCase as BaseTestCase;
 use Spatie\Activitylog\ActivitylogServiceProvider;
 use Spatie\LaravelData\LaravelDataServiceProvider;
+use Spatie\Permission\PermissionServiceProvider;
 
-class TestCase extends \Orchestra\Testbench\TestCase
+class TestCase extends BaseTestCase
 {
     protected function setUp(): void
     {
@@ -31,26 +32,11 @@ class TestCase extends \Orchestra\Testbench\TestCase
     {
         return [
             LunarServiceProvider::class,
-            ConverterServiceProvider::class,
             ActivitylogServiceProvider::class,
             LaravelDataServiceProvider::class,
             SearchServiceProvider::class,
             ScoutServiceProvider::class,
+            PermissionServiceProvider::class,
         ];
-    }
-
-    protected function getEnvironmentSetUp($app)
-    {
-        // perform environment setup
-    }
-
-    /**
-     * Define database migrations.
-     *
-     * @return void
-     */
-    protected function defineDatabaseMigrations()
-    {
-        $this->loadLaravelMigrations();
     }
 }

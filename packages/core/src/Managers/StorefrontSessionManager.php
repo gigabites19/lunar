@@ -1,23 +1,23 @@
 <?php
 
-namespace Lunar\Managers;
+namespace Lunar\Core\Managers;
 
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Session\SessionManager;
 use Illuminate\Support\Collection;
-use Lunar\Base\StorefrontSessionInterface;
-use Lunar\Exceptions\CustomerNotBelongsToUserException;
-use Lunar\Models\Channel;
-use Lunar\Models\Contracts\Channel as ChannelContract;
-use Lunar\Models\Contracts\Currency as CurrencyContract;
-use Lunar\Models\Contracts\Customer as CustomerContract;
-use Lunar\Models\Contracts\CustomerGroup as CustomerGroupContract;
-use Lunar\Models\Currency;
-use Lunar\Models\Customer;
-use Lunar\Models\CustomerGroup;
+use Lunar\Core\Contracts\StorefrontSession;
+use Lunar\Core\Exceptions\CustomerNotBelongsToUserException;
+use Lunar\Core\Models\Channel;
+use Lunar\Core\Models\Contracts\Channel as ChannelContract;
+use Lunar\Core\Models\Contracts\Currency as CurrencyContract;
+use Lunar\Core\Models\Contracts\Customer as CustomerContract;
+use Lunar\Core\Models\Contracts\CustomerGroup as CustomerGroupContract;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Customer;
+use Lunar\Core\Models\CustomerGroup;
 
-class StorefrontSessionManager implements StorefrontSessionInterface
+class StorefrontSessionManager implements StorefrontSession
 {
     protected ?ChannelContract $channel = null;
 
@@ -57,7 +57,7 @@ class StorefrontSessionManager implements StorefrontSessionInterface
     }
 
     /**
-     * @return \Illuminate\Support\Collection<\Lunar\Models\Contracts\CustomerGroup>
+     * @return Collection<CustomerGroupContract>
      */
     public function getCustomerGroups(): Collection
     {
@@ -65,7 +65,7 @@ class StorefrontSessionManager implements StorefrontSessionInterface
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<\Lunar\Models\Contracts\CustomerGroup>  $customerGroups
+     * @param  Collection<CustomerGroupContract>  $customerGroups
      */
     public function setCustomerGroups(Collection $customerGroups): static
     {

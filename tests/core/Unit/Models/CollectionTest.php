@@ -1,10 +1,13 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
-use Lunar\FieldTypes\Text;
-use Lunar\Models\Collection;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\FieldTypes\Text;
+use Lunar\Core\Models\Collection;
+use Lunar\Tests\Core\TestCase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(TestCase::class)->group('cross-db');
+
+uses(RefreshDatabase::class);
 
 test('can make a collection', function () {
     $collection = Collection::factory()

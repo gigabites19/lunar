@@ -2,16 +2,16 @@
 
 namespace Lunar\Tests\Shipping;
 
-use Cartalyst\Converter\Laravel\ConverterServiceProvider;
 use Illuminate\Support\Facades\Config;
 use Kalnoy\Nestedset\NestedSetServiceProvider;
-use Lunar\LunarServiceProvider;
+use Lunar\Core\LunarServiceProvider;
 use Lunar\Shipping\ShippingServiceProvider;
 use Lunar\Tests\Admin\Stubs\User;
 use Lunar\Tests\TestCase as BaseTestCase;
 use Spatie\Activitylog\ActivitylogServiceProvider;
 use Spatie\LaravelBlink\BlinkServiceProvider;
 use Spatie\MediaLibrary\MediaLibraryServiceProvider;
+use Spatie\Permission\PermissionServiceProvider;
 
 class TestCase extends BaseTestCase
 {
@@ -30,26 +30,11 @@ class TestCase extends BaseTestCase
         return [
             LunarServiceProvider::class,
             MediaLibraryServiceProvider::class,
+            PermissionServiceProvider::class,
             ActivitylogServiceProvider::class,
-            ConverterServiceProvider::class,
             NestedSetServiceProvider::class,
             ShippingServiceProvider::class,
             BlinkServiceProvider::class,
         ];
-    }
-
-    protected function getEnvironmentSetUp($app)
-    {
-        $this->replaceModelsForTesting();
-    }
-
-    /**
-     * Define database migrations.
-     *
-     * @return void
-     */
-    protected function defineDatabaseMigrations()
-    {
-        $this->loadLaravelMigrations();
     }
 }

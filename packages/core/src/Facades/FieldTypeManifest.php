@@ -1,15 +1,15 @@
 <?php
 
-namespace Lunar\Facades;
+namespace Lunar\Core\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Lunar\Base\FieldTypeManifestInterface;
+use Lunar\Core\FieldTypes\Manifest;
 
 /**
  * @method static void add(string $classname)
  * @method static \Illuminate\Support\Collection getTypes()
  *
- * @see \Lunar\Base\FieldTypeManifest
+ * @see Manifest
  */
 class FieldTypeManifest extends Facade
 {
@@ -18,6 +18,6 @@ class FieldTypeManifest extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return FieldTypeManifestInterface::class;
+        return \Lunar\Core\Contracts\FieldTypeManifest::class;
     }
 }

@@ -1,13 +1,13 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Lunar\Base\BaseModel;
-use Lunar\Database\Factories\DiscountableFactory;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Database\Factories\DiscountableFactory;
 
 /**
  * @property int $id
@@ -15,10 +15,10 @@ use Lunar\Database\Factories\DiscountableFactory;
  * @property string $purchasable_type
  * @property int $purchasable_id
  * @property string $type
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class Discountable extends BaseModel implements Contracts\Discountable
+class Discountable extends Base implements Contracts\Discountable
 {
     use HasFactory;
 

@@ -1,22 +1,22 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Database\Factories\StateFactory;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Database\Factories\StateFactory;
+use Lunar\Core\Models\Concerns\HasMacros;
 
 /**
  * @property int $id
  * @property ?int $country_id
  * @property string $name
  * @property string $code
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class State extends BaseModel implements Contracts\State
+class State extends Base implements Contracts\State
 {
     use HasFactory;
     use HasMacros;

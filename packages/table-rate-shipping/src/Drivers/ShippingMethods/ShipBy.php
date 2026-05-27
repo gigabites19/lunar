@@ -2,9 +2,11 @@
 
 namespace Lunar\Shipping\Drivers\ShippingMethods;
 
-use Lunar\DataTypes\ShippingOption;
-use Lunar\Facades\Pricing;
-use Lunar\Models\Product;
+use Lunar\Core\DataObjects\PriceValue;
+use Lunar\Core\DataTypes\ShippingOption;
+use Lunar\Core\Exceptions\MissingCurrencyPriceException;
+use Lunar\Core\Facades\Pricing;
+use Lunar\Core\Models\Product;
 use Lunar\Shipping\DataTransferObjects\ShippingOptionRequest;
 use Lunar\Shipping\Interfaces\ShippingRateInterface;
 use Lunar\Shipping\Models\ShippingRate;
@@ -70,13 +72,21 @@ class ShipBy implements ShippingRateInterface
         $tier = $subTotal;
 
         if ($chargeBy == 'weight') {
-            $tier = $cart->lines->sum(function ($line) {
-                return $line->purchasable->weight_value * $line->quantity;
-            });
+            $tier = $cart->lines->sum(
+                fn ($line) => $line->purchasable->weight->to('weight.kg')->convert()->getValue() * $line->quantity
+            );
         }
 
         // Do we have a suitable tier price?
-        $pricing = Pricing::for($shippingRate)->customerGroups($customerGroups)->qty($tier)->get();
+        try {
+            $pricing = Pricing::for($shippingRate)
+                ->currency($cart->currency)
+                ->customerGroups($customerGroups)
+                ->qty($tier)
+                ->get();
+        } catch (MissingCurrencyPriceException) {
+            return null;
+        }
 
         $prices = $pricing->priceBreaks;
 
@@ -93,13 +103,11 @@ class ShipBy implements ShippingRateInterface
             return null;
         }
 
-        $price = $matched->price;
-
         return new ShippingOption(
             name: $shippingMethod->name,
             description: $shippingMethod->description,
             identifier: $shippingRate->getIdentifier(),
-            price: $price,
+            price: new PriceValue((int) $matched->price, $matched->currency),
             taxClass: $shippingRate->getTaxClass(),
             taxReference: $shippingRate->getTaxReference(),
             option: $shippingZone->name,

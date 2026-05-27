@@ -1,21 +1,21 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Casts\AsAttributeData;
-use Lunar\Base\Traits\HasAttributes;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Base\Traits\HasPersonalDetails;
-use Lunar\Base\Traits\HasTranslations;
-use Lunar\Base\Traits\LogsActivity;
-use Lunar\Base\Traits\Searchable;
-use Lunar\Database\Factories\CustomerFactory;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Casts\AsAttributeData;
+use Lunar\Core\Database\Factories\CustomerFactory;
+use Lunar\Core\Models\Concerns\HasAttributes;
+use Lunar\Core\Models\Concerns\HasMacros;
+use Lunar\Core\Models\Concerns\HasPersonalDetails;
+use Lunar\Core\Models\Concerns\HasTranslations;
+use Lunar\Core\Models\Concerns\LogsActivity;
+use Lunar\Core\Models\Concerns\Searchable;
 
 /**
  * @property int $id
@@ -27,10 +27,10 @@ use Lunar\Database\Factories\CustomerFactory;
  * @property ?string $account_ref
  * @property ?array $attribute_data
  * @property ?array $meta
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class Customer extends BaseModel implements Contracts\Customer
+class Customer extends Base implements Contracts\Customer
 {
     use HasAttributes;
     use HasFactory;
@@ -101,6 +101,11 @@ class Customer extends BaseModel implements Contracts\Customer
     public function orders(): HasMany
     {
         return $this->hasMany(Order::modelClass());
+    }
+
+    public function carts(): HasMany
+    {
+        return $this->hasMany(Cart::modelClass());
     }
 
     public function mappedAttributes(): MorphToMany

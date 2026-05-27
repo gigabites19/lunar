@@ -1,21 +1,24 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class)->group('cart_session');
-
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Session;
-use Lunar\Facades\CartSession;
-use Lunar\Managers\CartSessionManager;
-use Lunar\Models\Cart;
-use Lunar\Models\CartAddress;
-use Lunar\Models\Channel;
-use Lunar\Models\Currency;
-use Lunar\Models\Order;
+use Lunar\Core\Facades\CartSession;
+use Lunar\Core\Managers\CartSessionManager;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\CartAddress;
+use Lunar\Core\Models\Channel;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Order;
+use Lunar\Tests\Core\Stubs\User;
+use Lunar\Tests\Core\TestCase;
+
+uses(TestCase::class)->group('cart_session');
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseMissing;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('can instantiate manager', function () {
     $manager = app(CartSessionManager::class);
@@ -169,7 +172,7 @@ test('can fetch authenticated users cart and set in session', function () {
     expect($cart)->toBeNull();
 
     actingAs(
-        $user = \Lunar\Tests\Core\Stubs\User::factory()->create()
+        $user = User::factory()->create()
     );
 
     $userCart = Cart::factory()->create([

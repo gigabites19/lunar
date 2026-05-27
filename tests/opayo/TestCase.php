@@ -2,18 +2,18 @@
 
 namespace Lunar\Tests\Opayo;
 
-use Cartalyst\Converter\Laravel\ConverterServiceProvider;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Kalnoy\Nestedset\NestedSetServiceProvider;
 use Livewire\LivewireServiceProvider;
-use Lunar\LunarServiceProvider;
+use Lunar\Core\LunarServiceProvider;
 use Lunar\Opayo\OpayoServiceProvider;
 use Lunar\Shipping\ShippingServiceProvider;
 use Lunar\Tests\TestCase as BaseTestCase;
 use Spatie\Activitylog\ActivitylogServiceProvider;
 use Spatie\LaravelBlink\BlinkServiceProvider;
 use Spatie\MediaLibrary\MediaLibraryServiceProvider;
+use Spatie\Permission\PermissionServiceProvider;
 
 class TestCase extends BaseTestCase
 {
@@ -51,8 +51,8 @@ class TestCase extends BaseTestCase
             LunarServiceProvider::class,
             LivewireServiceProvider::class,
             MediaLibraryServiceProvider::class,
+            PermissionServiceProvider::class,
             ActivitylogServiceProvider::class,
-            ConverterServiceProvider::class,
             NestedSetServiceProvider::class,
             ShippingServiceProvider::class,
             BlinkServiceProvider::class,

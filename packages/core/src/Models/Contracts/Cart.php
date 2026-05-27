@@ -1,19 +1,19 @@
 <?php
 
-namespace Lunar\Models\Contracts;
+namespace Lunar\Core\Models\Contracts;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
-use Lunar\Base\Addressable;
-use Lunar\Base\LunarUser;
-use Lunar\Base\Purchasable;
-use Lunar\DataTypes\ShippingOption;
-use Lunar\Exceptions\FingerprintMismatchException;
-use Lunar\Models\Customer;
-use Lunar\Models\Order;
+use Lunar\Core\Contracts\Addressable;
+use Lunar\Core\Contracts\LunarUser;
+use Lunar\Core\Contracts\Purchasable;
+use Lunar\Core\DataTypes\ShippingOption;
+use Lunar\Core\Exceptions\FingerprintMismatchException;
+use Lunar\Core\Models\Customer;
+use Lunar\Core\Models\Order;
 
 interface Cart
 {
@@ -90,67 +90,71 @@ interface Cart
     /**
      * Calculate the cart totals and cache the result.
      */
-    public function calculate(): \Lunar\Models\Cart;
+    public function calculate(): \Lunar\Core\Models\Cart;
 
     /**
      * Add or update a purchasable item to the cart
      */
-    public function add(Purchasable $purchasable, int $quantity = 1, array $meta = [], bool $refresh = true): \Lunar\Models\Cart;
+    public function add(Purchasable $purchasable, int $quantity = 1, array $meta = [], bool $refresh = true): \Lunar\Core\Models\Cart;
 
     /**
      * Add cart lines.
      */
-    public function addLines(iterable $lines): \Lunar\Models\Cart;
+    public function addLines(iterable $lines): \Lunar\Core\Models\Cart;
 
     /**
      * Remove a cart line
      */
-    public function remove(int $cartLineId, bool $refresh = true): \Lunar\Models\Cart;
+    public function remove(int $cartLineId, bool $refresh = true): \Lunar\Core\Models\Cart;
 
     /**
      * Update cart line
      */
-    public function updateLine(int $cartLineId, int $quantity, ?array $meta = null, bool $refresh = true): \Lunar\Models\Cart;
+    public function updateLine(int $cartLineId, int $quantity, ?array $meta = null, bool $refresh = true): \Lunar\Core\Models\Cart;
 
     /**
      * Update cart lines.
      */
-    public function updateLines(Collection $lines): \Lunar\Models\Cart;
+    public function updateLines(Collection $lines): \Lunar\Core\Models\Cart;
 
     /**
      * Deletes all cart lines.
      */
-    public function clear(): \Lunar\Models\Cart;
+    public function clear(): \Lunar\Core\Models\Cart;
 
     /**
      * Associate a user to the cart
      */
-    public function associate(LunarUser $user, string $policy = 'merge', bool $refresh = true): \Lunar\Models\Cart;
+    public function associate(LunarUser $user, string $policy = 'merge', bool $refresh = true): \Lunar\Core\Models\Cart;
 
     /**
      * Associate a customer to the cart
      */
-    public function setCustomer(Customer $customer): \Lunar\Models\Cart;
+    public function setCustomer(Customer $customer): \Lunar\Core\Models\Cart;
 
     /**
      * Add an address to the Cart.
      */
-    public function addAddress(array|Addressable $address, string $type, bool $refresh = true): \Lunar\Models\Cart;
+    public function addAddress(array|Addressable $address, string $type, bool $refresh = true): \Lunar\Core\Models\Cart;
 
     /**
      * Set the shipping address.
+     *
+     * By default any tax-zone override set on the cart is cleared, since
+     * the address is now the authoritative source for tax-zone resolution.
+     * Pass `$clearTaxZone = false` to keep a previously-pinned zone.
      */
-    public function setShippingAddress(array|Addressable $address): \Lunar\Models\Cart;
+    public function setShippingAddress(array|Addressable $address, bool $clearTaxZone = true): \Lunar\Core\Models\Cart;
 
     /**
      * Set the billing address.
      */
-    public function setBillingAddress(array|Addressable $address): \Lunar\Models\Cart;
+    public function setBillingAddress(array|Addressable $address): \Lunar\Core\Models\Cart;
 
     /**
      * Set the shipping option to the shipping address.
      */
-    public function setShippingOption(ShippingOption $option, bool $refresh = true): \Lunar\Models\Cart;
+    public function setShippingOption(ShippingOption $option, bool $refresh = true): \Lunar\Core\Models\Cart;
 
     /**
      * Get the shipping option for the cart
@@ -188,4 +192,13 @@ interface Cart
      * Return the estimated shipping cost for a cart.
      */
     public function getEstimatedShipping(array $params, bool $setOverride = false): ?ShippingOption;
+
+    /**
+     * Set the tax zone override for this cart.
+     *
+     * When set, all tax calculations use this zone instead of resolving one
+     * from the shipping address. Pass null to clear the override.
+     * Pass `$refresh = false` to skip persistence and recalculation.
+     */
+    public function setTaxZone(?TaxZone $taxZone, bool $refresh = true): \Lunar\Core\Models\Cart;
 }

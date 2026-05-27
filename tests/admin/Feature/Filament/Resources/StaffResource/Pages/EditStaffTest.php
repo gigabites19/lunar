@@ -3,11 +3,12 @@
 use Livewire\Livewire;
 use Lunar\Admin\Filament\Resources\StaffResource;
 use Lunar\Admin\Filament\Resources\StaffResource\Pages\EditStaff;
-use Lunar\Admin\Models\Staff;
-use Lunar\Admin\Support\Facades\LunarAccessControl;
+use Lunar\Core\Models\Staff;
+use Lunar\Core\Support\Facades\LunarAccessControl;
+use Lunar\Tests\Admin\Feature\Filament\TestCase;
 use Spatie\Permission\Models\Role;
 
-uses(\Lunar\Tests\Admin\Feature\Filament\TestCase::class)
+uses(TestCase::class)
     ->group('resource.staff');
 
 beforeEach(fn () => $this->asStaff(admin: true));

@@ -1,13 +1,15 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\Exceptions\SchedulingException;
+use Lunar\Core\Models\Channel;
+use Lunar\Core\Models\CustomerGroup;
+use Lunar\Core\Models\Product;
+use Lunar\Tests\Core\TestCase;
 
-use Lunar\Exceptions\SchedulingException;
-use Lunar\Models\Channel;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Product;
+uses(TestCase::class);
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('can schedule using single model', function () {
     $product = Product::factory()->create();

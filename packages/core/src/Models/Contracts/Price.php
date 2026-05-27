@@ -1,9 +1,10 @@
 <?php
 
-namespace Lunar\Models\Contracts;
+namespace Lunar\Core\Models\Contracts;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Lunar\Core\DataObjects\PriceValue;
 
 interface Price
 {
@@ -25,10 +26,15 @@ interface Price
     /**
      * Return the price exclusive of tax.
      */
-    public function priceExTax(): \Lunar\DataTypes\Price;
+    public function priceExTax(?TaxZone $taxZone = null): PriceValue;
 
     /**
      * Return the price inclusive of tax.
      */
-    public function priceIncTax(): int|\Lunar\DataTypes\Price;
+    public function priceIncTax(?TaxZone $taxZone = null): PriceValue;
+
+    /**
+     * Return the list price inclusive of tax.
+     */
+    public function listPriceIncTax(?TaxZone $taxZone = null): PriceValue;
 }

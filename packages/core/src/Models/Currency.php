@@ -1,15 +1,15 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Traits\HasDefaultRecord;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Base\Traits\LogsActivity;
-use Lunar\Database\Factories\CurrencyFactory;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Database\Factories\CurrencyFactory;
+use Lunar\Core\Models\Concerns\HasDefaultRecord;
+use Lunar\Core\Models\Concerns\HasMacros;
+use Lunar\Core\Models\Concerns\LogsActivity;
 
 /**
  * @property int $id
@@ -20,10 +20,10 @@ use Lunar\Database\Factories\CurrencyFactory;
  * @property bool $enabled
  * @property bool $default
  * @property bool $sync_prices
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class Currency extends BaseModel implements Contracts\Currency
+class Currency extends Base implements Contracts\Currency
 {
     use HasDefaultRecord;
     use HasFactory;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Lunar\Jobs;
+namespace Lunar\Core\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -10,8 +10,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Lunar\Facades\DB;
-use Lunar\Models\Tag;
+use Lunar\Core\Facades\DB;
+use Lunar\Core\Models\Tag;
 
 class SyncTags implements ShouldQueue
 {
@@ -52,7 +52,7 @@ class SyncTags implements ShouldQueue
     {
         DB::transaction(function () {
             $tagIds = [];
-            // Make sure the tags are uppercase
+            // Tag::value has an uppercasing mutator, but we still upper here so the firstOrCreate lookup matches existing rows under case-sensitive collations.
             $this->tags->map(fn ($tag) => Str::upper($tag))
                 ->each(function ($tag) use (&$tagIds) {
                     $model = Tag::firstOrCreate([

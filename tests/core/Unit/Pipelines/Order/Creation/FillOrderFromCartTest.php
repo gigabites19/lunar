@@ -1,15 +1,17 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Order;
+use Lunar\Core\Models\Price;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Core\Pipelines\Order\Creation\FillOrderFromCart;
+use Lunar\Tests\Core\TestCase;
 
-use Lunar\Models\Cart;
-use Lunar\Models\Currency;
-use Lunar\Models\Order;
-use Lunar\Models\Price;
-use Lunar\Models\ProductVariant;
-use Lunar\Pipelines\Order\Creation\FillOrderFromCart;
+uses(TestCase::class);
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('can run pipeline', function () {
     $currency = Currency::factory()->create();
@@ -48,8 +50,8 @@ test('can run pipeline', function () {
     expect($order->reference)->not->toBeNull();
     expect($order->user_id)->toEqual($cart->user_id);
     expect($order->channel_id)->toEqual($cart->channel_id);
-    expect($order->sub_total->value)->toEqual($cart->subTotal->value);
-    expect($order->discount_otal?->value)->toEqual($cart->discountTotal?->value);
-    expect($order->tax_total->value)->toEqual($cart->taxTotal->value);
-    expect($order->total->value)->toEqual($cart->total->value);
+    expect($order->sub_total)->toEqual($cart->subTotal->value);
+    expect($order->discount_total)->toEqual($cart->discountTotal?->value);
+    expect($order->tax_total)->toEqual($cart->taxTotal->value);
+    expect($order->total)->toEqual($cart->total->value);
 });

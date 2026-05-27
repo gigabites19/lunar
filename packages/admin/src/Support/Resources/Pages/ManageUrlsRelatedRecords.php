@@ -24,7 +24,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Unique;
 use Lunar\Admin\Events\ModelUrlsUpdated;
 use Lunar\Admin\Support\Pages\BaseManageRelatedRecords;
-use Lunar\Facades\ModelManifest;
+use Lunar\Core\Facades\ModelManifest;
 
 class ManageUrlsRelatedRecords extends BaseManageRelatedRecords
 {
@@ -74,12 +74,17 @@ class ManageUrlsRelatedRecords extends BaseManageRelatedRecords
                         ->required(),
                     Select::make('language_id')->label(
                         __('lunarpanel::relationmanagers.urls.table.language.label')
-                    )->relationship(name: 'language', titleAttribute: 'name')->required()->reactive(),
+                    )->relationship(name: 'language', titleAttribute: 'name')->required()->live(),
                 ])->columns(2)->columnSpan(2),
             ]);
     }
 
     public function table(Table $table): Table
+    {
+        return parent::table($table);
+    }
+
+    protected function getDefaultTable(Table $table): Table
     {
         return $table
             ->recordTitleAttribute('name')

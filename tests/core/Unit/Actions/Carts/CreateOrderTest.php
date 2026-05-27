@@ -1,29 +1,33 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\Actions\Carts\CreateOrder;
+use Lunar\Core\DataObjects\PriceValue as PriceDataType;
+use Lunar\Core\DataTypes\ShippingOption;
+use Lunar\Core\Exceptions\DisallowMultipleCartOrdersException;
+use Lunar\Core\Facades\ModelManifest;
+use Lunar\Core\Facades\ShippingManifest;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\CartAddress;
+use Lunar\Core\Models\Country;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Customer;
+use Lunar\Core\Models\CustomerGroup;
+use Lunar\Core\Models\Order;
+use Lunar\Core\Models\OrderAddress;
+use Lunar\Core\Models\OrderLine;
+use Lunar\Core\Models\Price;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Core\Models\TaxClass;
+use Lunar\Core\Models\TaxRateAmount;
+use Lunar\Tests\Core\Stubs\Models\CustomOrder;
+use Lunar\Tests\Core\TestCase;
 
-use Lunar\Actions\Carts\CreateOrder;
-use Lunar\DataTypes\Price as PriceDataType;
-use Lunar\DataTypes\ShippingOption;
-use Lunar\Exceptions\DisallowMultipleCartOrdersException;
-use Lunar\Facades\ShippingManifest;
-use Lunar\Models\Cart;
-use Lunar\Models\CartAddress;
-use Lunar\Models\Country;
-use Lunar\Models\Currency;
-use Lunar\Models\Customer;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Order;
-use Lunar\Models\OrderAddress;
-use Lunar\Models\OrderLine;
-use Lunar\Models\Price;
-use Lunar\Models\ProductVariant;
-use Lunar\Models\TaxClass;
-use Lunar\Models\TaxRateAmount;
+uses(TestCase::class);
 
-use function Pest\Laravel\{assertDatabaseHas};
+use function Pest\Laravel\assertDatabaseHas;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 it('cant create order if already has complete and multiple disabled', function () {
     TaxClass::factory()->create([
@@ -64,9 +68,7 @@ test('can create order if multiple enabled', function () {
         'placed_at' => now(),
     ]);
 
-    $newOrder = (new CreateOrder)->execute($cart, allowMultipleOrders: true)->then(
-        fn ($order) => $order->refresh()
-    );
+    $newOrder = app(CreateOrder::class)->execute($cart, allowMultipleOrders: true)->refresh();
 
     $this->assertNotSame($newOrder->id, $order->id);
 });
@@ -99,9 +101,7 @@ function can_update_draft_order()
         'updated_at' => $updatedAt,
     ]);
 
-    $updatedOrder = (new CreateOrder)->execute($cart, allowMultipleOrders: true)->then(
-        fn ($order) => $order->refresh()
-    );
+    $updatedOrder = app(CreateOrder::class)->execute($cart, allowMultipleOrders: true)->refresh();
 
     expect($orderB->id)->toBe($updatedOrder->id);
     expect($orderB->updated_at->eq($updatedOrder->updated_at))->toBeFalse();
@@ -109,9 +109,9 @@ function can_update_draft_order()
 }
 
 test('can create order', function () {
-    \Lunar\Facades\ModelManifest::replace(
-        \Lunar\Models\Contracts\Order::class,
-        \Lunar\Tests\Core\Stubs\Models\CustomOrder::class
+    ModelManifest::replace(
+        Lunar\Core\Models\Contracts\Order::class,
+        CustomOrder::class
     );
     CustomerGroup::factory()->create([
         'default' => true,
@@ -202,7 +202,7 @@ test('can create order', function () {
             'identifier' => $tax->identifier,
             'percentage' => $tax->percentage,
             'value' => $tax->price->value,
-            'currency_code' => $tax->price->currency->code,
+            'currency_code' => $tax->price->resolveCurrency()->code,
         ]];
     });
 
@@ -334,7 +334,7 @@ test('can create order with customer', function () {
             'identifier' => $tax->identifier,
             'percentage' => $tax->percentage,
             'value' => $tax->price->value,
-            'currency_code' => $tax->price->currency->code,
+            'currency_code' => $tax->price->resolveCurrency()->code,
         ]];
     });
 

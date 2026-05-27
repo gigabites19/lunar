@@ -1,23 +1,23 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Traits\HasDefaultRecord;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Database\Factories\LanguageFactory;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Database\Factories\LanguageFactory;
+use Lunar\Core\Models\Concerns\HasDefaultRecord;
+use Lunar\Core\Models\Concerns\HasMacros;
 
 /**
  * @property int $id
  * @property string $code
  * @property string $name
  * @property bool $default
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class Language extends BaseModel implements Contracts\Language
+class Language extends Base implements Contracts\Language
 {
     use HasDefaultRecord;
     use HasFactory;

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Lunar\Admin\Filament\Resources\ProductResource;
 use Lunar\Admin\Filament\Resources\ProductVariantResource;
 use Lunar\Admin\Support\Pages\BaseEditRecord;
+use Lunar\Filament\Schemas\ProductVariant\ProductVariantForm;
 
 class ManageVariantInventory extends BaseEditRecord
 {
@@ -65,12 +66,12 @@ class ManageVariantInventory extends BaseEditRecord
     {
         return $schema->components([
             Section::make()->schema([
-                ProductVariantResource::getStockFormComponent(),
-                ProductVariantResource::getBackorderFormComponent(),
-                ProductVariantResource::getPurchasableFormComponent(),
-                ProductVariantResource::getUnitQtyFormComponent(),
-                ProductVariantResource::getQuantityIncrementFormComponent(),
-                ProductVariantResource::getMinQuantityFormComponent(),
+                ProductVariantForm::getStockComponent(),
+                ProductVariantForm::getBackorderComponent(),
+                ProductVariantForm::getPurchasableComponent(),
+                ProductVariantForm::getUnitQtyComponent(),
+                ProductVariantForm::getQuantityIncrementComponent(),
+                ProductVariantForm::getMinQuantityComponent(),
             ])->columns([
                 'sm' => 1,
                 'xl' => 3,

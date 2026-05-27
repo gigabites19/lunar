@@ -1,22 +1,22 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Database\Factories\TaxRateAmountFactory;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Database\Factories\TaxRateAmountFactory;
+use Lunar\Core\Models\Concerns\HasMacros;
 
 /**
  * @property int $id
  * @property ?int $tax_class_id
  * @property ?int $tax_rate_id
  * @property float $percentage
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class TaxRateAmount extends BaseModel implements Contracts\TaxRateAmount
+class TaxRateAmount extends Base implements Contracts\TaxRateAmount
 {
     use HasFactory;
     use HasMacros;

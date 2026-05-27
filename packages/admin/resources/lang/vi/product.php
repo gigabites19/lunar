@@ -1,25 +1,24 @@
 <?php
 
 return [
-
     'label' => 'Sản phẩm',
-
     'plural_label' => 'Sản phẩm',
-
     'tabs' => [
         'all' => 'Tất cả',
+        'published' => 'Published',
+        'draft' => 'Draft',
     ],
-
     'status' => [
         'unpublished' => [
-            'content' => 'Hiện đang ở trạng thái nháp, sản phẩm này bị ẩn trên tất cả các kênh và nhóm khách hàng.',
+            'content' => 'Hiện đang ở trạng thái nháp, sản phẩm này không khả dụng trên tất cả các kênh và nhóm khách hàng.',
         ],
         'availability' => [
             'customer_groups' => 'Sản phẩm này hiện không có sẵn cho tất cả các nhóm khách hàng.',
             'channels' => 'Sản phẩm này hiện không có sẵn trên tất cả các kênh.',
+            'hidden_from_guests' => 'Khách hiện không thể xem hoặc mua sản phẩm này. Nhóm khách hàng mặc định không được bật hoặc hiển thị cho sản phẩm này.',
+            'no_default_customer_group' => 'Chưa thiết lập nhóm khách hàng mặc định, do đó không thể kiểm soát khả năng hiển thị cho khách tại đây. Đánh dấu một nhóm khách hàng làm mặc định để quản lý quyền truy cập của khách.',
         ],
     ],
-
     'table' => [
         'status' => [
             'label' => 'Trạng thái',
@@ -45,14 +44,12 @@ return [
             'label' => 'Loại sản phẩm',
         ],
     ],
-
     'actions' => [
         'edit_status' => [
             'label' => 'Cập nhật trạng thái',
             'heading' => 'Cập nhật trạng thái',
         ],
     ],
-
     'form' => [
         'name' => [
             'label' => 'Tên',
@@ -81,12 +78,13 @@ return [
         ],
         'tags' => [
             'label' => 'Thẻ',
+            'helper_text' => 'Separate tags by pressing Enter, Tab or comma (,)',
         ],
         'collections' => [
             'label' => 'Bộ sưu tập',
+            'select_collection' => 'Select a collection',
         ],
     ],
-
     'pages' => [
         'availability' => [
             'label' => 'Tình trạng có sẵn',
@@ -125,5 +123,4 @@ return [
             'label' => 'Liên kết sản phẩm',
         ],
     ],
-
 ];

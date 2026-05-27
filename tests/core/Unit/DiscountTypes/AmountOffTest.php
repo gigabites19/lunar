@@ -1,22 +1,24 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
-
-use Lunar\DiscountTypes\AmountOff;
-use Lunar\Facades\CartSession;
-use Lunar\Models\Brand;
-use Lunar\Models\Cart;
-use Lunar\Models\Channel;
-use Lunar\Models\Currency;
-use Lunar\Models\Customer;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Discount;
-use Lunar\Models\Price;
-use Lunar\Models\Product;
-use Lunar\Models\ProductVariant;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\DiscountTypes\AmountOff;
+use Lunar\Core\Facades\CartSession;
+use Lunar\Core\Models\Brand;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\Channel;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Customer;
+use Lunar\Core\Models\CustomerGroup;
+use Lunar\Core\Models\Discount;
+use Lunar\Core\Models\Price;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductVariant;
 use Lunar\Tests\Core\Stubs\User;
+use Lunar\Tests\Core\TestCase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(TestCase::class);
+
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Currency::factory()->create([
@@ -1692,11 +1694,14 @@ test('fixed amount discount distributes across cart lines with different values'
     expect($fourthLine->subTotalDiscounted->value)->toBeGreaterThanOrEqual(0);
     expect($lastLine->subTotalDiscounted->value)->toBeGreaterThanOrEqual(0);
 
-    expect($firstLine->discountTotal->value)->toEqual(150);
+    // Largest-remainder allocation: subtotals 150/200/400/400/360, total 1510,
+    // discount 1500. Floors 148/198/397/397/357 sum to 1497; +1 goes to the
+    // three lines with the largest fractional remainders (A, B, E).
+    expect($firstLine->discountTotal->value)->toEqual(149);
     expect($secondLine->discountTotal->value)->toEqual(199);
     expect($thirdLine->discountTotal->value)->toEqual(397);
     expect($fourthLine->discountTotal->value)->toEqual(397);
-    expect($lastLine->discountTotal->value)->toEqual(357);
+    expect($lastLine->discountTotal->value)->toEqual(358);
     expect($cart->discountTotal->value)->toEqual(1500);
 });
 

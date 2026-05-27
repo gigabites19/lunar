@@ -1,17 +1,19 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Casts\Price;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Base\Traits\LogsActivity;
-use Lunar\Database\Factories\TransactionFactory;
-use Lunar\Facades\Payments;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Contracts\HasCurrency;
+use Lunar\Core\Database\Factories\TransactionFactory;
+use Lunar\Core\Facades\Payments;
+use Lunar\Core\Models\Concerns\FormatsPrices;
+use Lunar\Core\Models\Concerns\HasMacros;
+use Lunar\Core\Models\Concerns\LogsActivity;
+use Lunar\Core\Models\Contracts\Currency as CurrencyContract;
 
 /**
  * @property int $id
@@ -27,12 +29,13 @@ use Lunar\Facades\Payments;
  * @property string $card_type
  * @property ?string $last_four
  * @property ?array $meta
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
- * @property ?\Illuminate\Support\Carbon $deleted_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
+ * @property ?Carbon $deleted_at
  */
-class Transaction extends BaseModel implements Contracts\Transaction
+class Transaction extends Base implements Contracts\Transaction, HasCurrency
 {
+    use FormatsPrices;
     use HasFactory;
     use HasMacros;
     use LogsActivity;
@@ -47,9 +50,16 @@ class Transaction extends BaseModel implements Contracts\Transaction
      */
     protected $casts = [
         'refund' => 'bool',
-        'amount' => Price::class,
+        'amount' => 'integer',
         'meta' => AsArrayObject::class,
     ];
+
+    public function resolveCurrency(): CurrencyContract
+    {
+        $this->loadMissing('order.currency');
+
+        return $this->order?->currency ?? Currency::getDefault();
+    }
 
     /**
      * Return a new factory instance for the model.

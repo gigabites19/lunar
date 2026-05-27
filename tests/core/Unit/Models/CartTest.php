@@ -1,42 +1,45 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class)->group('carts');
-
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
-use Lunar\DataTypes\Price as DataTypesPrice;
-use Lunar\DataTypes\ShippingOption;
-use Lunar\DiscountTypes\AmountOff;
-use Lunar\Exceptions\Carts\CartException;
-use Lunar\Exceptions\FingerprintMismatchException;
-use Lunar\Facades\Discounts;
-use Lunar\Facades\ShippingManifest;
-use Lunar\Models\Cart;
-use Lunar\Models\CartAddress;
-use Lunar\Models\CartLine;
-use Lunar\Models\Channel;
-use Lunar\Models\Country;
-use Lunar\Models\Currency;
-use Lunar\Models\Customer;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Discount;
-use Lunar\Models\Order;
-use Lunar\Models\Price;
-use Lunar\Models\ProductVariant;
-use Lunar\Models\TaxClass;
-use Lunar\Models\TaxRate;
-use Lunar\Models\TaxRateAmount;
-use Lunar\Models\TaxZone;
-use Lunar\Models\TaxZonePostcode;
+use Lunar\Core\DataObjects\PriceValue as DataTypesPrice;
+use Lunar\Core\DataTypes\ShippingOption;
+use Lunar\Core\DiscountTypes\AmountOff;
+use Lunar\Core\Exceptions\Carts\CartException;
+use Lunar\Core\Exceptions\FingerprintMismatchException;
+use Lunar\Core\Facades\Discounts;
+use Lunar\Core\Facades\ShippingManifest;
+use Lunar\Core\Managers\CartSessionManager;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\CartAddress;
+use Lunar\Core\Models\CartLine;
+use Lunar\Core\Models\Channel;
+use Lunar\Core\Models\Country;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Customer;
+use Lunar\Core\Models\CustomerGroup;
+use Lunar\Core\Models\Discount;
+use Lunar\Core\Models\Order;
+use Lunar\Core\Models\Price;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Core\Models\TaxClass;
+use Lunar\Core\Models\TaxRate;
+use Lunar\Core\Models\TaxRateAmount;
+use Lunar\Core\Models\TaxZone;
+use Lunar\Core\Models\TaxZonePostcode;
 use Lunar\Tests\Core\Stubs\User as StubUser;
+use Lunar\Tests\Core\TestCase;
 
-use function Pest\Laravel\{assertDatabaseCount};
+uses(TestCase::class)->group('carts', 'cross-db');
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+use function Pest\Laravel\assertDatabaseCount;
 
-//function setAuthUserConfig()
-//{
+uses(RefreshDatabase::class);
+
+// function setAuthUserConfig()
+// {
 //    Config::set('auth.providers.users.model', 'Lunar\Tests\Stubs\User');
-//}
+// }
 
 test('can make a cart', function () {
     $currency = Currency::factory()->create();
@@ -51,8 +54,9 @@ test('can make a cart', function () {
     $this->assertDatabaseHas((new Cart)->getTable(), [
         'currency_id' => $currency->id,
         'channel_id' => $channel->id,
-        'meta' => json_encode(['foo' => 'bar']),
     ]);
+
+    expect((array) $cart->fresh()->meta)->toEqual(['foo' => 'bar']);
 
     $variant = ProductVariant::factory()->create();
 
@@ -450,13 +454,8 @@ test('can calculate the cart', function () {
 
     expect($cart->isCalculated())->toEqual(true);
     expect($cart->lines[0]->unitPrice->value)->toEqual(100);
-    expect($cart->lines[0]->unitPrice->unitFormatted(null, NumberFormatter::CURRENCY, 6))->toEqual('$1.00');
-    expect($cart->lines[0]->unitPrice->unitFormatted(null, NumberFormatter::CURRENCY, 6, false))->toEqual('$1.000000');
     expect($cart->lines[1]->unitPrice->value)->toEqual(158);
-    expect($cart->lines[1]->unitPrice->unitDecimal(false))->toEqual(0.0158);
     expect($cart->lines[1]->unitPriceInclTax->value)->toEqual(190);
-    expect($cart->lines[1]->unitPrice->unitFormatted(null, NumberFormatter::CURRENCY, 6))->toEqual('$0.0158');
-    expect($cart->lines[1]->unitPrice->unitFormatted(null, NumberFormatter::CURRENCY, 6, false))->toEqual('$0.015800');
     expect($cart->subTotal->value)->toEqual(103);
     expect($cart->total->value)->toEqual(124);
     expect($cart->taxBreakdown->amounts)->toHaveCount(2);
@@ -521,12 +520,7 @@ test('can calculate the cart inc vat', function () {
     $cart->calculate();
 
     expect($cart->lines[0]->unitPrice->value)->toEqual(100);
-    expect($cart->lines[0]->unitPrice->unitFormatted(null, NumberFormatter::CURRENCY, 6))->toEqual('$1.00');
-    expect($cart->lines[0]->unitPrice->unitFormatted(null, NumberFormatter::CURRENCY, 6, false))->toEqual('$1.000000');
     expect($cart->lines[1]->unitPrice->value)->toEqual(158);
-    expect($cart->lines[1]->unitPrice->unitDecimal(false))->toEqual(0.0158);
-    expect($cart->lines[1]->unitPrice->unitFormatted(null, NumberFormatter::CURRENCY, 6))->toEqual('$0.0158');
-    expect($cart->lines[1]->unitPrice->unitFormatted(null, NumberFormatter::CURRENCY, 6, false))->toEqual('$0.015800');
     expect($cart->subTotal->value)->toEqual(103);
     expect($cart->total->value)->toEqual(103);
     expect($cart->taxBreakdown->amounts)->toHaveCount(2);
@@ -1038,7 +1032,7 @@ test('can get new draft order when cart changes', function () {
         name: 'Basic Delivery',
         description: 'Basic Delivery',
         identifier: 'BASDEL',
-        price: new \Lunar\DataTypes\Price(500, $cart->currency, 1),
+        price: new DataTypesPrice(500, $cart->currency, 1),
         taxClass: $taxClass
     );
 
@@ -1124,7 +1118,7 @@ test('can get same draft order when cart does not change', function () {
         name: 'Basic Delivery',
         description: 'Basic Delivery',
         identifier: 'BASDEL',
-        price: new \Lunar\DataTypes\Price(500, $cart->currency, 1),
+        price: new DataTypesPrice(500, $cart->currency, 1),
         taxClass: $taxClass
     );
 
@@ -1162,4 +1156,168 @@ test('can get same draft order when cart does not change', function () {
             $cart->currentDraftOrder()->id
         )->toBe($newOrder->id);
 
+});
+
+test('cart tax zone override is applied through the full calculation pipeline', function () {
+    // Prices are stored ex-tax; tax is added on top during cart calculation.
+    Config::set('lunar.pricing.stored_inclusive_of_tax', false);
+
+    $currency = Currency::factory()->state(['code' => 'GBP'])->create();
+    $cart = Cart::factory()->create(['currency_id' => $currency->id]);
+
+    $taxClass = TaxClass::factory()->create(['name' => 'Standard', 'default' => true]);
+
+    // Default zone: 0 % – simulates a store where no tax applies for unknown locations.
+    $defaultTaxZone = TaxZone::factory()->state(['default' => true])->create();
+    $defaultRate = TaxRate::factory()->state(['tax_zone_id' => $defaultTaxZone])->create(['name' => 'Default Rate']);
+    TaxRateAmount::factory()->create([
+        'tax_class_id' => $taxClass->id,
+        'tax_rate_id' => $defaultRate->id,
+        'percentage' => 0,
+    ]);
+
+    // UAE zone: 20 % – the override set by IP-detection middleware.
+    $uaeZone = TaxZone::factory()->state(['default' => false])->create(['name' => 'UAE']);
+    $uaeRate = TaxRate::factory()->state(['tax_zone_id' => $uaeZone])->create(['name' => 'UAE VAT']);
+    TaxRateAmount::factory()->create([
+        'tax_class_id' => $taxClass->id,
+        'tax_rate_id' => $uaeRate->id,
+        'percentage' => 20,
+    ]);
+
+    $purchasable = ProductVariant::factory(['tax_class_id' => $taxClass->id])->create();
+
+    Price::factory()->create([
+        'price' => 1000,
+        'min_quantity' => 1,
+        'currency_id' => $currency->id,
+        'priceable_type' => $purchasable->getMorphClass(),
+        'priceable_id' => $purchasable->id,
+    ]);
+
+    $cart->lines()->create([
+        'purchasable_type' => $purchasable->getMorphClass(),
+        'purchasable_id' => $purchasable->id,
+        'quantity' => 1,
+    ]);
+
+    // Default zone (0 %) – the cart-level zone is passed through the full pipeline:
+    // CalculateLines publishes the Blink key; CalculateTax forwards it to the driver.
+    $cart->setTaxZone($defaultTaxZone)->calculate();
+    expect($cart->taxTotal->value)->toEqual(0);
+    expect($cart->total->value)->toEqual(1000);
+
+    // Switch to UAE zone (20 %) – the override is correctly picked up.
+    $cart->setTaxZone($uaeZone)->recalculate();
+    expect($cart->taxTotal->value)->toEqual(200);   // 20 % of 1000
+    expect($cart->total->value)->toEqual(1200);
+
+    // Switch back to the default zone – pipeline correctly reverts to 0 %.
+    $cart->setTaxZone($defaultTaxZone)->recalculate();
+    expect($cart->taxTotal->value)->toEqual(0);
+    expect($cart->total->value)->toEqual(1000);
+});
+
+test('setShippingAddress clears the tax zone override by default', function () {
+    $currency = Currency::factory()->create();
+    $cart = Cart::factory()->create(['currency_id' => $currency->id]);
+
+    $taxZone = TaxZone::factory()->state(['default' => false])->create();
+    $cart->setTaxZone($taxZone, refresh: false)->save();
+
+    $cart->setShippingAddress(CartAddress::factory()->make()->toArray());
+
+    expect($cart->fresh()->tax_zone_id)->toBeNull();
+});
+
+test('setShippingAddress preserves the tax zone override when opted out', function () {
+    $currency = Currency::factory()->create();
+    $cart = Cart::factory()->create(['currency_id' => $currency->id]);
+
+    $taxZone = TaxZone::factory()->state(['default' => false])->create();
+    $cart->setTaxZone($taxZone, refresh: false)->save();
+
+    $cart->setShippingAddress(CartAddress::factory()->make()->toArray(), clearTaxZone: false);
+
+    expect($cart->fresh()->tax_zone_id)->toEqual($taxZone->id);
+});
+
+test('active scope correctly filters unmerged carts and isolates users', function () {
+    setAuthUserConfig();
+
+    $currency = Currency::factory()->create();
+    $channel = Channel::factory()->create();
+
+    $userA = StubUser::factory()->create();
+    $userB = StubUser::factory()->create();
+
+    $otherUsersCart = Cart::factory()->create([
+        'user_id' => $userB->id,
+        'currency_id' => $currency->id,
+        'channel_id' => $channel->id,
+    ]);
+
+    $expectedCart = Cart::factory()->create([
+        'user_id' => $userA->id,
+        'currency_id' => $currency->id,
+        'channel_id' => $channel->id,
+        'merged_id' => null,
+    ]);
+
+    $mergedCart = Cart::factory()->create([
+        'user_id' => $userA->id,
+        'currency_id' => $currency->id,
+        'channel_id' => $channel->id,
+        'merged_id' => $expectedCart->id,
+    ]);
+
+    $cartId = $userA->carts()
+        ->unmerged()
+        ->active()
+        ->latest('id')
+        ->value('id');
+
+    expect($cartId)->toBe($expectedCart->id)
+        ->and($cartId)->not->toBe($otherUsersCart->id)
+        ->and($cartId)->not->toBe($mergedCart->id);
+});
+
+test('cart session manager prefers the latest unmerged cart for an authenticated user', function () {
+    setAuthUserConfig();
+
+    $currency = Currency::factory()->create();
+    $channel = Channel::factory()->create();
+    $user = StubUser::factory()->create();
+
+    $older = Cart::factory()->create([
+        'user_id' => $user->id,
+        'merged_id' => null,
+        'currency_id' => $currency->id,
+        'channel_id' => $channel->id,
+    ]);
+
+    $expectedCart = Cart::factory()->create([
+        'user_id' => $user->id,
+        'merged_id' => null,
+        'currency_id' => $currency->id,
+        'channel_id' => $channel->id,
+    ]);
+
+    $mergedCart = Cart::factory()->create([
+        'user_id' => $user->id,
+        'merged_id' => $expectedCart->id,
+        'currency_id' => $currency->id,
+        'channel_id' => $channel->id,
+    ]);
+
+    $this->actingAs($user);
+
+    $manager = app(CartSessionManager::class);
+    $foundCart = $manager->current();
+
+    expect($foundCart)->not->toBeNull()
+        ->and($foundCart->id)->toBe($expectedCart->id)
+        ->and($foundCart->id)->not->toBe($older->id)
+        ->and($foundCart->id)->not->toBe($mergedCart->id)
+        ->and($foundCart->merged_id)->toBeNull();
 });

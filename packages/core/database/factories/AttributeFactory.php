@@ -1,10 +1,11 @@
 <?php
 
-namespace Lunar\Database\Factories;
+namespace Lunar\Core\Database\Factories;
 
 use Illuminate\Support\Str;
-use Lunar\Models\Attribute;
-use Lunar\Models\AttributeGroup;
+use Lunar\Core\FieldTypes\Text;
+use Lunar\Core\Models\Attribute;
+use Lunar\Core\Models\AttributeGroup;
 
 class AttributeFactory extends BaseFactory
 {
@@ -26,7 +27,7 @@ class AttributeFactory extends BaseFactory
             ],
             'handle' => Str::slug($this->faker->name()),
             'section' => $this->faker->name(),
-            'type' => \Lunar\FieldTypes\Text::class,
+            'type' => Text::class,
             'required' => false,
             'default_value' => '',
             'configuration' => [

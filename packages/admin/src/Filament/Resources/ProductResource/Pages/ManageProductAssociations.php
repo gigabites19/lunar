@@ -14,10 +14,9 @@ use Filament\Tables\Table;
 use Lunar\Admin\Events\ProductAssociationsUpdated;
 use Lunar\Admin\Filament\Resources\ProductResource;
 use Lunar\Admin\Support\Pages\BaseManageRelatedRecords;
-use Lunar\Models\Contracts\Product as ProductContract;
-use Lunar\Models\Contracts\ProductAssociation as ProductAssociationContract;
-use Lunar\Models\Product;
-use Lunar\Models\ProductAssociation;
+use Lunar\Core\Models\Contracts\ProductAssociation as ProductAssociationContract;
+use Lunar\Core\Models\ProductAssociation;
+use Lunar\Filament\Forms\Components\ProductSelect;
 
 class ManageProductAssociations extends BaseManageRelatedRecords
 {
@@ -44,17 +43,8 @@ class ManageProductAssociations extends BaseManageRelatedRecords
     {
         return $schema
             ->components([
-                Select::make('product_target_id')
-                    ->label('Product')
-                    ->required()
-                    ->searchable(true)
-                    ->getSearchResultsUsing(static function (Select $component, string $search): array {
-                        return get_search_builder(Product::modelClass(), $search)
-                            ->get()
-                            ->mapWithKeys(fn (ProductContract $record): array => [$record->getKey() => $record->translateAttribute('name')])
-                            ->all();
-                    })
-                    ->getOptionLabelUsing(fn ($value): ?string => Product::modelClass()::find($value)?->translateAttribute('name')),
+                ProductSelect::make('product_target_id')
+                    ->required(),
                 Select::make('type')
                     ->required()
                     ->options(ProductAssociation::getTypes()),
@@ -63,28 +53,32 @@ class ManageProductAssociations extends BaseManageRelatedRecords
 
     public function table(Table $table): Table
     {
+        return parent::table($table);
+    }
+
+    protected function getDefaultTable(Table $table): Table
+    {
         return $table
             ->recordTitleAttribute('name')
             ->inverseRelationship('parent')
             ->columns([
-                TextColumn::make('target')
-                    ->formatStateUsing(fn (ProductAssociationContract $record): string => $record->target->translateAttribute('name'))
+                TextColumn::make('target_name')
+                    ->state(fn (ProductAssociationContract $record): ?string => $record->target?->translateAttribute('name'))
                     ->limit(50)
                     ->tooltip(function (TextColumn $column, ProductAssociationContract $record): ?string {
-                        $state = $column->getState();
+                        $name = $record->target?->translateAttribute('name');
 
-                        if (strlen($record->target->translateAttribute('name')) <= $column->getCharacterLimit()) {
+                        if ($name === null || strlen($name) <= $column->getCharacterLimit()) {
                             return null;
                         }
 
-                        // Only render the tooltip if the column contents exceeds the length limit.
-                        return $record->target->translateAttribute('name');
+                        return $name;
                     })
                     ->label(__('lunarpanel::product.table.name.label')),
                 TextColumn::make('target.variants.sku')
                     ->label('SKU'),
                 TextColumn::make('type')->formatStateUsing(function ($state) {
-                    $enum = config('lunar.products.association_types_enum', \Lunar\Base\Enums\ProductAssociation::class);
+                    $enum = config('lunar.products.association_types_enum', \Lunar\Core\Enums\ProductAssociation::class);
 
                     return $enum::tryFrom($state)?->label() ?: $state;
                 }),

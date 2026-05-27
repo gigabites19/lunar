@@ -1,14 +1,14 @@
 <?php
 
-namespace Lunar\Pipelines\Order\Creation;
+namespace Lunar\Core\Pipelines\Order\Creation;
 
 use Closure;
 use Illuminate\Support\Facades\App;
-use Lunar\DataTypes\ShippingOption;
-use Lunar\Models\Contracts\Order as OrderContract;
-use Lunar\Models\Contracts\OrderLine as OrderLineContract;
-use Lunar\Models\Order;
-use Lunar\Models\OrderLine;
+use Lunar\Core\DataTypes\ShippingOption;
+use Lunar\Core\Models\Contracts\Order as OrderContract;
+use Lunar\Core\Models\Contracts\OrderLine as OrderLineContract;
+use Lunar\Core\Models\Order;
+use Lunar\Core\Models\OrderLine;
 
 class CreateShippingLine
 {
@@ -43,7 +43,7 @@ class CreateShippingLine
                 'unit_quantity' => $shippingOption->getUnitQuantity(),
                 'quantity' => 1,
                 'sub_total' => $shippingAddress->shippingSubTotal->value,
-                'discount_total' => $shippingAddress->shippingSubTotal->discountTotal?->value ?: 0,
+                'discount_total' => 0,
                 'tax_breakdown' => $shippingAddress->taxBreakdown,
                 'tax_total' => $shippingAddress->shippingTaxTotal->value,
                 'total' => $shippingAddress->shippingTotal->value,

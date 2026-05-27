@@ -1,12 +1,12 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Database\Factories\CountryFactory;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Database\Factories\CountryFactory;
+use Lunar\Core\Models\Concerns\HasMacros;
 
 /**
  * @property int $id
@@ -19,10 +19,10 @@ use Lunar\Database\Factories\CountryFactory;
  * @property ?string $native
  * @property string $emoji
  * @property string $emoji_u
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class Country extends BaseModel implements Contracts\Country
+class Country extends Base implements Contracts\Country
 {
     use HasFactory;
     use HasMacros;

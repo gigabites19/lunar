@@ -1,16 +1,18 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\Actions\Carts\AddOrUpdatePurchasable;
+use Lunar\Core\Exceptions\InvalidCartLineQuantityException;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\CartLine;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Price;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Tests\Core\TestCase;
 
-use Lunar\Actions\Carts\AddOrUpdatePurchasable;
-use Lunar\Exceptions\InvalidCartLineQuantityException;
-use Lunar\Models\Cart;
-use Lunar\Models\CartLine;
-use Lunar\Models\Currency;
-use Lunar\Models\Price;
-use Lunar\Models\ProductVariant;
+uses(TestCase::class);
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('can add cart lines', function () {
     $currency = Currency::factory()->create();
@@ -31,7 +33,7 @@ test('can add cart lines', function () {
 
     expect($cart->lines)->toHaveCount(0);
 
-    $action = new AddOrUpdatePurchasable;
+    $action = app(AddOrUpdatePurchasable::class);
 
     $action->execute($cart, $purchasable, 1);
 
@@ -59,7 +61,7 @@ test('cannot add zero quantity line', function () {
 
     $this->expectException(InvalidCartLineQuantityException::class);
 
-    $action = new AddOrUpdatePurchasable;
+    $action = app(AddOrUpdatePurchasable::class);
 
     $action->execute($cart, $purchasable, 0);
 });
@@ -81,7 +83,7 @@ test('can update existing cart line', function () {
         'priceable_id' => $purchasable->id,
     ]);
 
-    $action = new AddOrUpdatePurchasable;
+    $action = app(AddOrUpdatePurchasable::class);
 
     expect($cart->lines)->toHaveCount(0);
 

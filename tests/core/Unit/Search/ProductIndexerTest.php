@@ -1,16 +1,18 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\FieldTypes\Text;
+use Lunar\Core\FieldTypes\TranslatedText;
+use Lunar\Core\Models\Attribute;
+use Lunar\Core\Models\Language;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Core\Search\ProductIndexer;
+use Lunar\Tests\Core\TestCase;
 
-use Lunar\FieldTypes\Text;
-use Lunar\FieldTypes\TranslatedText;
-use Lunar\Models\Attribute;
-use Lunar\Models\Language;
-use Lunar\Models\Product;
-use Lunar\Models\ProductVariant;
-use Lunar\Search\ProductIndexer;
+uses(TestCase::class)->group('search', 'indexer');
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('can return correct searchable data', function () {
     Language::factory()->create([
@@ -58,6 +60,7 @@ test('can return correct searchable data', function () {
     ]);
 
     $data = app(ProductIndexer::class)->toSearchableArray($product);
+
     expect($data)->toHaveKey('id');
     expect($data['skus'])->toBe([$variant->sku]);
     expect($data['status'])->toEqual($product->status);

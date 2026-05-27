@@ -1,18 +1,20 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Casts\Price;
-use Lunar\Base\Casts\TaxBreakdown;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Base\Traits\LogsActivity;
-use Lunar\Database\Factories\OrderLineFactory;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Casts\TaxBreakdown;
+use Lunar\Core\Contracts\HasCurrency;
+use Lunar\Core\Database\Factories\OrderLineFactory;
+use Lunar\Core\Models\Concerns\FormatsPrices;
+use Lunar\Core\Models\Concerns\HasMacros;
+use Lunar\Core\Models\Concerns\LogsActivity;
+use Lunar\Core\Models\Contracts\Currency as CurrencyContract;
 
 /**
  * @property int $id
@@ -33,11 +35,12 @@ use Lunar\Database\Factories\OrderLineFactory;
  * @property int $total
  * @property ?string $notes
  * @property ?array $meta
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class OrderLine extends BaseModel implements Contracts\OrderLine
+class OrderLine extends Base implements Contracts\OrderLine, HasCurrency
 {
+    use FormatsPrices;
     use HasFactory;
     use HasMacros;
     use LogsActivity;
@@ -68,12 +71,19 @@ class OrderLine extends BaseModel implements Contracts\OrderLine
         'quantity' => 'integer',
         'meta' => AsArrayObject::class,
         'tax_breakdown' => TaxBreakdown::class,
-        'unit_price' => Price::class,
-        'sub_total' => Price::class,
-        'tax_total' => Price::class,
-        'discount_total' => Price::class,
-        'total' => Price::class,
+        'unit_price' => 'integer',
+        'sub_total' => 'integer',
+        'tax_total' => 'integer',
+        'discount_total' => 'integer',
+        'total' => 'integer',
     ];
+
+    public function resolveCurrency(): CurrencyContract
+    {
+        $this->loadMissing('order.currency');
+
+        return $this->order?->currency ?? Currency::getDefault();
+    }
 
     public function order(): BelongsTo
     {

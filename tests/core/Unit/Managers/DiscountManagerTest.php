@@ -1,33 +1,35 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
-
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
-use Lunar\Base\DataTransferObjects\CartDiscount;
-use Lunar\Base\DiscountManagerInterface;
-use Lunar\DiscountTypes\AmountOff;
-use Lunar\Facades\Discounts;
-use Lunar\Managers\DiscountManager;
-use Lunar\Models\Cart;
-use Lunar\Models\CartLine;
-use Lunar\Models\Channel;
-use Lunar\Models\Currency;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Discount;
-use Lunar\Models\Price;
-use Lunar\Models\Product;
-use Lunar\Models\ProductVariant;
+use Lunar\Core\Contracts\DiscountManager;
+use Lunar\Core\DataObjects\CartDiscount;
+use Lunar\Core\DiscountTypes\AmountOff;
+use Lunar\Core\Facades\Discounts;
+use Lunar\Core\Managers\DiscountManager as DiscountManagerImpl;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\CartLine;
+use Lunar\Core\Models\Channel;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\CustomerGroup;
+use Lunar\Core\Models\Discount;
+use Lunar\Core\Models\Price;
+use Lunar\Core\Models\Product;
+use Lunar\Core\Models\ProductVariant;
 use Lunar\Tests\Core\Stubs\TestDiscountType;
+use Lunar\Tests\Core\TestCase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(TestCase::class);
+
+uses(RefreshDatabase::class);
 
 test('can instantiate manager', function () {
-    $manager = app(DiscountManagerInterface::class);
-    expect($manager)->toBeInstanceOf(DiscountManager::class);
+    $manager = app(DiscountManager::class);
+    expect($manager)->toBeInstanceOf(DiscountManagerImpl::class);
 });
 
 test('can set channel', function () {
-    $manager = app(DiscountManagerInterface::class);
+    $manager = app(DiscountManager::class);
 
     $channel = Channel::factory()->create();
 
@@ -49,7 +51,7 @@ test('can set channel', function () {
 });
 
 test('can set customer group', function () {
-    $manager = app(DiscountManagerInterface::class);
+    $manager = app(DiscountManager::class);
 
     $customerGroup = CustomerGroup::factory()->create();
 
@@ -103,7 +105,7 @@ test('can restrict discounts to channel', function () {
         ],
     ]);
 
-    $manager = app(DiscountManagerInterface::class);
+    $manager = app(DiscountManager::class);
 
     expect($manager->getDiscounts())->toBeEmpty();
 
@@ -190,7 +192,7 @@ test('can restrict discounts to customer group', function () {
         ],
     ]);
 
-    $manager = app(DiscountManagerInterface::class);
+    $manager = app(DiscountManager::class);
 
     expect($manager->getDiscounts())->toHaveCount(1);
 
@@ -223,20 +225,20 @@ test('can restrict discounts to customer group', function () {
 });
 
 test('can fetch discount types', function () {
-    $manager = app(DiscountManagerInterface::class);
+    $manager = app(DiscountManager::class);
 
     expect($manager->getTypes())->toBeInstanceOf(Collection::class);
 });
 
 test('can fetch applied discounts', function () {
-    $manager = app(DiscountManagerInterface::class);
+    $manager = app(DiscountManager::class);
 
     expect($manager->getApplied())->toBeInstanceOf(Collection::class);
     expect($manager->getApplied())->toHaveCount(0);
 });
 
 test('can add applied discount', function () {
-    $manager = app(DiscountManagerInterface::class);
+    $manager = app(DiscountManager::class);
 
     expect($manager->getApplied())->toBeInstanceOf(Collection::class);
 
@@ -258,7 +260,7 @@ test('can add applied discount', function () {
 });
 
 test('can add new types', function () {
-    $manager = app(DiscountManagerInterface::class);
+    $manager = app(DiscountManager::class);
 
     $testType = $manager->getTypes()->first(function ($type) {
         return get_class($type) == TestDiscountType::class;
@@ -276,7 +278,7 @@ test('can add new types', function () {
 });
 
 test('can validate coupons', function () {
-    $manager = app(DiscountManagerInterface::class);
+    $manager = app(DiscountManager::class);
 
     Discount::factory()->create([
         'type' => AmountOff::class,
@@ -397,4 +399,247 @@ test('can get discount with coupon', function () {
     ]);
 
     expect(Discounts::getDiscounts($cart->refresh()))->toHaveCount(1);
+});
+
+test('stop flag halts further discounts after a discount applies', function () {
+    Currency::factory()->create([
+        'code' => 'GBP',
+        'decimal_places' => 2,
+    ]);
+
+    $channel = Channel::factory()->create([
+        'default' => true,
+    ]);
+
+    $customerGroup = CustomerGroup::factory()->create([
+        'default' => true,
+    ]);
+
+    $cart = Cart::factory()->create([
+        'channel_id' => $channel->id,
+        'currency_id' => Currency::getDefault()->id,
+    ]);
+
+    $purchasable = ProductVariant::factory()->create([
+        'product_id' => Product::factory(),
+    ]);
+
+    Price::factory()->create([
+        'price' => 1000,
+        'min_quantity' => 1,
+        'currency_id' => Currency::getDefault()->id,
+        'priceable_type' => $purchasable->getMorphClass(),
+        'priceable_id' => $purchasable->id,
+    ]);
+
+    $cart->lines()->create([
+        'purchasable_type' => $purchasable->getMorphClass(),
+        'purchasable_id' => $purchasable->id,
+        'quantity' => 1,
+    ]);
+
+    $stopper = Discount::factory()->create([
+        'type' => AmountOff::class,
+        'name' => 'Stopper',
+        'priority' => 10,
+        'stop' => true,
+        'data' => [
+            'fixed_value' => false,
+            'percentage' => 5,
+        ],
+    ]);
+
+    $shouldNotApply = Discount::factory()->create([
+        'type' => AmountOff::class,
+        'name' => 'Should not apply',
+        'priority' => 5,
+        'stop' => false,
+        'data' => [
+            'fixed_value' => false,
+            'percentage' => 20,
+        ],
+    ]);
+
+    foreach ([$stopper, $shouldNotApply] as $discount) {
+        $discount->customerGroups()->sync([
+            $customerGroup->id => [
+                'enabled' => true,
+                'starts_at' => now(),
+            ],
+        ]);
+
+        $discount->channels()->sync([
+            $channel->id => [
+                'enabled' => true,
+                'starts_at' => now(),
+            ],
+        ]);
+    }
+
+    $cart->calculate();
+
+    expect($cart->discounts)->toHaveCount(1);
+    expect($cart->discounts->first()->discount->name)->toBe('Stopper');
+});
+
+test('stop flag does not halt further discounts when conditions fail', function () {
+    Currency::factory()->create([
+        'code' => 'GBP',
+        'decimal_places' => 2,
+    ]);
+
+    $channel = Channel::factory()->create([
+        'default' => true,
+    ]);
+
+    $customerGroup = CustomerGroup::factory()->create([
+        'default' => true,
+    ]);
+
+    $cart = Cart::factory()->create([
+        'channel_id' => $channel->id,
+        'currency_id' => Currency::getDefault()->id,
+    ]);
+
+    $purchasable = ProductVariant::factory()->create([
+        'product_id' => Product::factory(),
+    ]);
+
+    Price::factory()->create([
+        'price' => 1000,
+        'min_quantity' => 1,
+        'currency_id' => Currency::getDefault()->id,
+        'priceable_type' => $purchasable->getMorphClass(),
+        'priceable_id' => $purchasable->id,
+    ]);
+
+    $cart->lines()->create([
+        'purchasable_type' => $purchasable->getMorphClass(),
+        'purchasable_id' => $purchasable->id,
+        'quantity' => 1,
+    ]);
+
+    $couponed = Discount::factory()->create([
+        'type' => AmountOff::class,
+        'name' => 'Coupon discount that wont match',
+        'priority' => 10,
+        'stop' => true,
+        'coupon' => 'WRONG',
+        'data' => [
+            'fixed_value' => false,
+            'percentage' => 20,
+        ],
+    ]);
+
+    $fallback = Discount::factory()->create([
+        'type' => AmountOff::class,
+        'name' => 'Fallback',
+        'priority' => 5,
+        'stop' => false,
+        'data' => [
+            'fixed_value' => false,
+            'percentage' => 10,
+        ],
+    ]);
+
+    foreach ([$couponed, $fallback] as $discount) {
+        $discount->customerGroups()->sync([
+            $customerGroup->id => [
+                'enabled' => true,
+                'starts_at' => now(),
+            ],
+        ]);
+
+        $discount->channels()->sync([
+            $channel->id => [
+                'enabled' => true,
+                'starts_at' => now(),
+            ],
+        ]);
+    }
+
+    $cart->calculate();
+
+    expect($cart->discounts)->toHaveCount(1);
+    expect($cart->discounts->first()->discount->name)->toBe('Fallback');
+});
+
+test('stop=false discount lets further discounts apply', function () {
+    Currency::factory()->create([
+        'code' => 'GBP',
+        'decimal_places' => 2,
+    ]);
+
+    $channel = Channel::factory()->create([
+        'default' => true,
+    ]);
+
+    $customerGroup = CustomerGroup::factory()->create([
+        'default' => true,
+    ]);
+
+    $cart = Cart::factory()->create([
+        'channel_id' => $channel->id,
+        'currency_id' => Currency::getDefault()->id,
+    ]);
+
+    $purchasable = ProductVariant::factory()->create([
+        'product_id' => Product::factory(),
+    ]);
+
+    Price::factory()->create([
+        'price' => 1000,
+        'min_quantity' => 1,
+        'currency_id' => Currency::getDefault()->id,
+        'priceable_type' => $purchasable->getMorphClass(),
+        'priceable_id' => $purchasable->id,
+    ]);
+
+    $cart->lines()->create([
+        'purchasable_type' => $purchasable->getMorphClass(),
+        'purchasable_id' => $purchasable->id,
+        'quantity' => 1,
+    ]);
+
+    $first = Discount::factory()->create([
+        'type' => AmountOff::class,
+        'name' => 'First',
+        'priority' => 10,
+        'stop' => false,
+        'data' => [
+            'fixed_value' => false,
+            'percentage' => 10,
+        ],
+    ]);
+
+    $second = Discount::factory()->create([
+        'type' => AmountOff::class,
+        'name' => 'Second',
+        'priority' => 5,
+        'stop' => false,
+        'data' => [
+            'fixed_value' => false,
+            'percentage' => 20,
+        ],
+    ]);
+
+    foreach ([$first, $second] as $discount) {
+        $discount->customerGroups()->sync([
+            $customerGroup->id => [
+                'enabled' => true,
+                'starts_at' => now(),
+            ],
+        ]);
+
+        $discount->channels()->sync([
+            $channel->id => [
+                'enabled' => true,
+                'starts_at' => now(),
+            ],
+        ]);
+    }
+
+    $cart->calculate();
+
+    expect($cart->discounts)->toHaveCount(2);
 });

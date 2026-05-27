@@ -1,0 +1,43 @@
+# Lunar v2 Specs
+
+Design documents for the work tracked in `packages/lunar/TODO.md`.
+
+## Conventions
+
+- One file per item, named `NNNN-short-slug.md` (e.g. `0001-upgrade-package.md`).
+- Numbers are allocated sequentially as specs are started; they do not imply priority or order of implementation.
+- Use `0000-template.md` as the starting point for every new spec.
+- A spec should land (reviewed and merged) before its implementation work begins.
+- Keep specs in present tense, focused on the change being proposed, not the history of how we got here.
+
+## Status
+
+Each spec carries a `Status:` line in its frontmatter / header:
+
+- `draft` — being written
+- `proposed` — ready for review
+- `accepted` — agreed, implementation can start
+- `implemented` — work has shipped
+- `superseded` — replaced by a later spec (link to it)
+
+## Index
+
+| #    | Title                       | Status      |
+| ---- | --------------------------- | ----------- |
+| 0001 | Upgrade package             | completed   |
+| 0002 | Core namespace change       | completed   |
+| 0003 | Flatten v1.x migrations     | completed   |
+| 0004 | Filament v5 upgrade         | completed   |
+| 0005 | Filament v5 schemas refactor | completed   |
+| 0006 | Extract `lunarphp/filament` bridge package and reshape the install model | implemented |
+| 0007 | Inline page-extension traits into base page classes | draft       |
+| 0008 | Reusable Filament entity-selector components | implemented |
+| 0009 | Filament-native verbs and discoverability (actions library + global search) | completed   |
+| 0010 | Publishable admin resources (and Staff to core) | completed   |
+| 0011 | Support `Model::preventLazyLoading()` | completed   |
+| 0012 | Price data type / cast refactor | completed   |
+| 0013 | `Base/` directory reorganisation | draft       |
+| 0014 | Price calculator service | draft       |
+| 0015 | PriceValue arithmetic | implemented |
+| 0016 | Service-layer dependency injection | implemented |
+| 0017 | Rename `compare_price` to `list_price` | completed   |

@@ -39,6 +39,7 @@ return [
                     ],
                     'min_weight' => [
                         'label' => 'Greutate min.',
+                        'helper_text' => 'Introduceți greutatea în kilograme',
                     ],
                     'price' => [
                         'label' => 'Preț',
@@ -47,8 +48,15 @@ return [
             ],
         ],
         'table' => [
+            'enabled' => [
+                'label' => 'Enabled',
+            ],
+            'disabled' => [
+                'label' => 'disabled',
+            ],
             'shipping_method' => [
                 'label' => 'Metodă de livrare',
+                'disabled' => 'Disabled',
             ],
             'price' => [
                 'label' => 'Preț',

@@ -1,6 +1,6 @@
 <?php
 
-namespace Lunar\Search;
+namespace Lunar\Core\Search;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -30,9 +30,9 @@ class ProductIndexer extends ScoutIndexer
     {
         return $query->with([
             'thumbnail',
-            'variants',
-            'productType',
-            'brand',
+            'variants' => fn ($query) => $query->select('id', 'sku', 'product_id'),
+            'productType' => fn ($query) => $query->select('id', 'name'),
+            'brand' => fn ($query) => $query->select('id', 'name'),
         ]);
     }
 

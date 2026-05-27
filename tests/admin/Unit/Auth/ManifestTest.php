@@ -1,11 +1,12 @@
 <?php
 
-use Lunar\Admin\Auth\Manifest;
 use Lunar\Admin\Support\Facades\LunarPanel;
+use Lunar\Core\Auth\Manifest;
+use Lunar\Tests\Admin\Feature\Filament\TestCase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-uses(\Lunar\Tests\Admin\Feature\Filament\TestCase::class)
+uses(TestCase::class)
     ->group('unit.manifest');
 
 beforeEach(fn () => $this->manifest = new Manifest);

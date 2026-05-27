@@ -1,20 +1,20 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Casts\CouponString;
-use Lunar\Base\Traits\HasChannels;
-use Lunar\Base\Traits\HasCustomerGroups;
-use Lunar\Base\Traits\HasTranslations;
-use Lunar\Base\Traits\LogsActivity;
-use Lunar\Database\Factories\DiscountFactory;
-use Lunar\DiscountTypes\AbstractDiscountType;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Casts\CouponString;
+use Lunar\Core\Database\Factories\DiscountFactory;
+use Lunar\Core\DiscountTypes\AbstractDiscountType;
+use Lunar\Core\Models\Concerns\HasChannels;
+use Lunar\Core\Models\Concerns\HasCustomerGroups;
+use Lunar\Core\Models\Concerns\HasTranslations;
+use Lunar\Core\Models\Concerns\LogsActivity;
 
 /**
  * @property int $id
@@ -22,16 +22,16 @@ use Lunar\DiscountTypes\AbstractDiscountType;
  * @property string $handle
  * @property ?string $coupon
  * @property string $type
- * @property \Illuminate\Support\Carbon $starts_at
- * @property \Illuminate\Support\Carbon $ends_at
+ * @property Carbon $starts_at
+ * @property Carbon $ends_at
  * @property int $uses
  * @property ?int $max_uses
  * @property int $priority
  * @property bool $stop
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class Discount extends BaseModel implements Contracts\Discount
+class Discount extends Base implements Contracts\Discount
 {
     use HasChannels,
         HasCustomerGroups,

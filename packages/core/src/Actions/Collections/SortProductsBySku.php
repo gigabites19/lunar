@@ -1,6 +1,6 @@
 <?php
 
-namespace Lunar\Actions\Collections;
+namespace Lunar\Core\Actions\Collections;
 
 use Illuminate\Support\Collection;
 
@@ -10,7 +10,7 @@ class SortProductsBySku
      * Execute the action.
      *
      * @param  string  $direction
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function execute(Collection $products, $direction = 'asc')
     {

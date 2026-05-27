@@ -1,14 +1,16 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class)->group('models');
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\Models\Address;
+use Lunar\Core\Models\Country;
+use Lunar\Core\Models\Customer;
+use Lunar\Tests\Core\TestCase;
 
-use Lunar\Models\Address;
-use Lunar\Models\Country;
-use Lunar\Models\Customer;
+uses(TestCase::class)->group('models', 'cross-db');
 
-use function Pest\Laravel\{assertDatabaseMissing};
+use function Pest\Laravel\assertDatabaseMissing;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('can make an address with minimal attributes', function () {
     $country = Country::factory()->create();
@@ -56,10 +58,12 @@ test('can make a full address', function () {
 
     $address = Address::create($data);
 
-    $data['meta'] = json_encode($data['meta']);
+    $expectedMeta = $data['meta'];
+    unset($data['meta']);
 
     $this->assertDatabaseHas('lunar_addresses', $data);
 
+    expect((array) $address->fresh()->meta)->toEqual($expectedMeta);
     expect($address->customer)->toBeInstanceOf(Customer::class);
     expect($address->country)->toBeInstanceOf(Country::class);
 });

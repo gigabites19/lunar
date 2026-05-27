@@ -1,22 +1,24 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Base\Traits\LogsActivity;
-use Lunar\Database\Factories\TagFactory;
-use Lunar\Facades\DB;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
+use Lunar\Core\Database\Factories\TagFactory;
+use Lunar\Core\Facades\DB;
+use Lunar\Core\Models\Concerns\HasMacros;
+use Lunar\Core\Models\Concerns\LogsActivity;
 
 /**
  * @property int $id
  * @property string $value
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class Tag extends BaseModel implements Contracts\Tag
+class Tag extends Base implements Contracts\Tag
 {
     use HasFactory;
     use HasMacros;
@@ -50,5 +52,12 @@ class Tag extends BaseModel implements Contracts\Tag
     public function taggable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    protected function value(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value) => $value === null ? null : Str::upper($value),
+        );
     }
 }

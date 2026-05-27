@@ -2,10 +2,8 @@
 
 namespace Lunar\Tests\Admin;
 
-use Awcodes\Shout\ShoutServiceProvider;
 use BladeUI\Heroicons\BladeHeroiconsServiceProvider;
 use BladeUI\Icons\BladeIconsServiceProvider;
-use Cartalyst\Converter\Laravel\ConverterServiceProvider;
 use Filament\Actions\ActionsServiceProvider;
 use Filament\FilamentServiceProvider;
 use Filament\Forms\FormsServiceProvider;
@@ -19,16 +17,17 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Kalnoy\Nestedset\NestedSetServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Lunar\Admin\LunarPanelProvider;
-use Lunar\Admin\Models\Staff;
-use Lunar\LunarServiceProvider;
+use Lunar\Core\LunarServiceProvider;
+use Lunar\Core\Models\Staff;
+use Lunar\Filament\LunarFilamentServiceProvider;
 use Lunar\Tests\Admin\Providers\LunarPanelTestServiceProvider;
 use Lunar\Tests\Admin\Stubs\User;
 use Lunar\Tests\TestCase as BaseTestCase;
+use MallardDuck\LucideIcons\BladeLucideIconsServiceProvider;
 use Spatie\Activitylog\ActivitylogServiceProvider;
 use Spatie\LaravelBlink\BlinkServiceProvider;
 use Spatie\MediaLibrary\MediaLibraryServiceProvider;
 use Spatie\Permission\PermissionServiceProvider;
-use Technikermathe\LucideIcons\BladeLucideIconsServiceProvider;
 
 class TestCase extends BaseTestCase
 {
@@ -38,8 +37,6 @@ class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        $this->loadLaravelMigrations();
-
         // Freeze time to avoid timestamp errors
         $this->freezeTime();
     }
@@ -48,6 +45,7 @@ class TestCase extends BaseTestCase
     {
         return [
             LunarServiceProvider::class,
+            LunarFilamentServiceProvider::class,
             LunarPanelProvider::class,
 
             ActionsServiceProvider::class,
@@ -62,7 +60,6 @@ class TestCase extends BaseTestCase
             TablesServiceProvider::class,
             WidgetsServiceProvider::class,
             BladeLucideIconsServiceProvider::class,
-            ShoutServiceProvider::class,
 
             LunarPanelTestServiceProvider::class,
 
@@ -70,7 +67,6 @@ class TestCase extends BaseTestCase
             MediaLibraryServiceProvider::class,
             PermissionServiceProvider::class,
             ActivitylogServiceProvider::class,
-            ConverterServiceProvider::class,
             NestedSetServiceProvider::class,
             BlinkServiceProvider::class,
 
@@ -82,7 +78,7 @@ class TestCase extends BaseTestCase
         $app['config']->set('auth.passwords.users.table', 'password_reset_tokens');
         $app['config']->set('auth.providers.users.model', User::class);
 
-        $this->replaceModelsForTesting();
+        parent::getEnvironmentSetUp($app);
     }
 
     protected function asStaff($admin = true): TestCase
@@ -97,6 +93,12 @@ class TestCase extends BaseTestCase
         ]);
 
         $staff->assignRole($admin ? 'admin' : 'staff');
+
+        $resolvedModel = config('lunar.staff.model', Staff::class);
+
+        if ($resolvedModel !== Staff::class) {
+            return $resolvedModel::find($staff->getKey());
+        }
 
         return $staff;
     }

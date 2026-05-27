@@ -1,6 +1,6 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -13,22 +13,22 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Casts\AsAttributeData;
-use Lunar\Base\Enums\Concerns\ProvidesProductAssociationType;
-use Lunar\Base\HasThumbnailImage;
-use Lunar\Base\Traits\HasChannels;
-use Lunar\Base\Traits\HasCustomerGroups;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Base\Traits\HasMedia;
-use Lunar\Base\Traits\HasTags;
-use Lunar\Base\Traits\HasTranslations;
-use Lunar\Base\Traits\HasUrls;
-use Lunar\Base\Traits\LogsActivity;
-use Lunar\Base\Traits\Searchable;
-use Lunar\Database\Factories\ProductFactory;
-use Lunar\Jobs\Products\Associations\Associate;
-use Lunar\Jobs\Products\Associations\Dissociate;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Casts\AsAttributeData;
+use Lunar\Core\Contracts\HasThumbnailImage;
+use Lunar\Core\Database\Factories\ProductFactory;
+use Lunar\Core\Enums\Concerns\ProvidesProductAssociationType;
+use Lunar\Core\Jobs\Products\Associations\Associate;
+use Lunar\Core\Jobs\Products\Associations\Dissociate;
+use Lunar\Core\Models\Concerns\HasChannels;
+use Lunar\Core\Models\Concerns\HasCustomerGroups;
+use Lunar\Core\Models\Concerns\HasMacros;
+use Lunar\Core\Models\Concerns\HasMedia;
+use Lunar\Core\Models\Concerns\HasTags;
+use Lunar\Core\Models\Concerns\HasTranslations;
+use Lunar\Core\Models\Concerns\HasUrls;
+use Lunar\Core\Models\Concerns\LogsActivity;
+use Lunar\Core\Models\Concerns\Searchable;
 use Spatie\MediaLibrary\HasMedia as SpatieHasMedia;
 
 /**
@@ -37,11 +37,11 @@ use Spatie\MediaLibrary\HasMedia as SpatieHasMedia;
  * @property int $product_type_id
  * @property string $status
  * @property ?\Illuminate\Support\Collection $attribute_data
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
- * @property ?\Illuminate\Support\Carbon $deleted_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
+ * @property ?Carbon $deleted_at
  */
-class Product extends BaseModel implements Contracts\Product, HasThumbnailImage, SpatieHasMedia
+class Product extends Base implements Contracts\Product, HasThumbnailImage, SpatieHasMedia
 {
     use HasChannels;
     use HasCustomerGroups;
@@ -130,7 +130,7 @@ class Product extends BaseModel implements Contracts\Product, HasThumbnailImage,
     public function collections(): BelongsToMany
     {
         return $this->belongsToMany(
-            \Lunar\Models\Collection::modelClass(),
+            \Lunar\Core\Models\Collection::modelClass(),
             config('lunar.database.table_prefix').'collection_product'
         )->withPivot(['position'])->orderByPivot('position')->withTimestamps();
     }

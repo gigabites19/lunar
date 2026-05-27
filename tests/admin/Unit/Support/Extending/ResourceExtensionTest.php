@@ -1,22 +1,34 @@
 <?php
 
-use Lunar\Admin\Filament\Resources\ActivityResource;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+use Livewire\Livewire;
 use Lunar\Admin\Filament\Resources\ActivityResource\Pages\ListActivities;
-use Lunar\Admin\Filament\Resources\AttributeGroupResource;
 use Lunar\Admin\Filament\Resources\AttributeGroupResource\Pages\ListAttributeGroups;
 use Lunar\Admin\Filament\Resources\CurrencyResource;
+use Lunar\Admin\Filament\Resources\CurrencyResource\Pages\EditCurrency;
 use Lunar\Admin\Filament\Resources\CurrencyResource\Pages\ListCurrencies;
 use Lunar\Admin\Filament\Resources\CustomerResource;
 use Lunar\Admin\Filament\Resources\LanguageResource;
+use Lunar\Admin\Filament\Resources\LanguageResource\Pages\EditLanguage;
 use Lunar\Admin\Filament\Resources\LanguageResource\Pages\ListLanguages;
 use Lunar\Admin\Support\Extending\ResourceExtension;
 use Lunar\Admin\Support\Facades\LunarPanel;
+use Lunar\Filament\Schemas\Currency\CurrencyForm;
+use Lunar\Filament\Schemas\Language\LanguageForm;
+use Lunar\Filament\Tables\Activity\ActivityTable;
+use Lunar\Filament\Tables\AttributeGroup\AttributeGroupTable;
+use Lunar\Filament\Tables\Currency\CurrencyTable;
+use Lunar\Filament\Tables\Language\LanguageTable;
+use Lunar\Tests\Admin\Feature\Filament\TestCase;
 use Lunar\Tests\Admin\Stubs\Filament\TestCustomerAddressRelationManager;
 
-uses(\Lunar\Tests\Admin\Feature\Filament\TestCase::class)
+uses(TestCase::class)
     ->group('extending', 'extending.resources');
 
-it('can extend relationship managers', function () {
+it('can extend relationship managers via getRelations hook on the resource', function () {
     $class = new class extends ResourceExtension
     {
         public function getRelations(array $managers): array
@@ -35,40 +47,40 @@ it('can extend relationship managers', function () {
     expect($relations)->toContain(TestCustomerAddressRelationManager::class);
 });
 
-it('can extend table columns', function ($resource, $page) {
+it('can extend table columns via configureTable hook on the split-class table', function ($table, $page) {
     $class = new class extends ResourceExtension
     {
-        public function extendTable(Filament\Tables\Table $table): Filament\Tables\Table
+        public function configureTable(Table $table): Table
         {
             return $table->columns([
                 ...$table->getColumns(),
-                \Filament\Tables\Columns\TextColumn::make('test_column'),
+                TextColumn::make('test_column'),
             ]);
         }
     };
 
     LunarPanel::extensions([
-        $resource => $class::class,
+        $table => $class::class,
     ]);
 
     $this->asStaff();
 
-    \Livewire\Livewire::test($page)->assertTableColumnExists('test_column');
+    Livewire::test($page)->assertTableColumnExists('test_column');
 })->with([
-    'ListCurrencies' => [CurrencyResource::class, ListCurrencies::class],
-    'ListLanguages' => [LanguageResource::class, ListLanguages::class],
-    'ListActivities' => [ActivityResource::class, ListActivities::class],
-    'ListAttributeGroups' => [AttributeGroupResource::class, ListAttributeGroups::class],
+    'CurrencyTable' => [CurrencyTable::class, ListCurrencies::class],
+    'LanguageTable' => [LanguageTable::class, ListLanguages::class],
+    'ActivityTable' => [ActivityTable::class, ListActivities::class],
+    'AttributeGroupTable' => [AttributeGroupTable::class, ListAttributeGroups::class],
 ]);
 
-it('can extend form schema', function ($resource, $page) {
-    $class = new class extends \Lunar\Admin\Support\Extending\ResourceExtension
+it('can extend form schema via configureForm hook on the split-class form', function ($resource, $form, $page) {
+    $class = new class extends ResourceExtension
     {
-        public function extendForm(Filament\Schemas\Schema $schema): Filament\Schemas\Schema
+        public function configureForm(Schema $schema): Schema
         {
             $schema->components([
                 ...$schema->getComponents(true),
-                \Filament\Forms\Components\TextInput::make('test_form_field'),
+                TextInput::make('test_form_field'),
             ]);
 
             return $schema;
@@ -76,17 +88,17 @@ it('can extend form schema', function ($resource, $page) {
     };
 
     LunarPanel::extensions([
-        $resource => $class::class,
+        $form => $class::class,
     ]);
 
     $this->asStaff(admin: true);
 
     $model = $resource::getModel()::factory()->create();
 
-    \Livewire\Livewire::test($page, [
+    Livewire::test($page, [
         'record' => $model->getRouteKey(),
     ])->assertFormFieldExists('test_form_field');
 })->with([
-    'CurrencyResource' => [CurrencyResource::class, CurrencyResource\Pages\EditCurrency::class],
-    'LanguageResource' => [LanguageResource::class, LanguageResource\Pages\EditLanguage::class],
+    'CurrencyForm' => [CurrencyResource::class, CurrencyForm::class, EditCurrency::class],
+    'LanguageForm' => [LanguageResource::class, LanguageForm::class, EditLanguage::class],
 ]);

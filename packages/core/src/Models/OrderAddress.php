@@ -1,16 +1,16 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Lunar\Base\Addressable;
-use Lunar\Base\BaseModel;
-use Lunar\Base\Traits\HasMacros;
-use Lunar\Base\Traits\HasPersonalDetails;
-use Lunar\Base\Traits\LogsActivity;
-use Lunar\Database\Factories\OrderAddressFactory;
+use Illuminate\Support\Carbon;
+use Lunar\Core\Contracts\Addressable;
+use Lunar\Core\Database\Factories\OrderAddressFactory;
+use Lunar\Core\Models\Concerns\HasMacros;
+use Lunar\Core\Models\Concerns\HasPersonalDetails;
+use Lunar\Core\Models\Concerns\LogsActivity;
 
 /**
  * @property int $id
@@ -33,10 +33,10 @@ use Lunar\Database\Factories\OrderAddressFactory;
  * @property string $type
  * @property ?string $shipping_option
  * @property array $meta
- * @property ?\Illuminate\Support\Carbon $created_at
- * @property ?\Illuminate\Support\Carbon $updated_at
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
  */
-class OrderAddress extends BaseModel implements Addressable, Contracts\OrderAddress
+class OrderAddress extends Base implements Addressable, Contracts\OrderAddress
 {
     use HasFactory;
     use HasMacros;

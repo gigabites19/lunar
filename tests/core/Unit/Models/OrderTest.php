@@ -1,26 +1,30 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
-
-use Lunar\Base\ValueObjects\Cart\ShippingBreakdown;
-use Lunar\Base\ValueObjects\Cart\ShippingBreakdownItem;
-use Lunar\Base\ValueObjects\Cart\TaxBreakdown;
-use Lunar\DataTypes\Price;
-use Lunar\Models\Cart;
-use Lunar\Models\Currency;
-use Lunar\Models\Customer;
-use Lunar\Models\Language;
-use Lunar\Models\Order;
-use Lunar\Models\OrderLine;
-use Lunar\Models\ProductVariant;
-use Lunar\Models\Transaction;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Lunar\Core\DataObjects\PriceValue;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\Customer;
+use Lunar\Core\Models\Language;
+use Lunar\Core\Models\Order;
+use Lunar\Core\Models\OrderLine;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Core\Models\Transaction;
+use Lunar\Core\ValueObjects\Cart\ShippingBreakdown;
+use Lunar\Core\ValueObjects\Cart\ShippingBreakdownItem;
+use Lunar\Core\ValueObjects\Cart\TaxBreakdown;
+use Lunar\Core\ValueObjects\Cart\TaxBreakdownAmount;
 use Lunar\Tests\Core\Stubs\User;
+use Lunar\Tests\Core\TestCase;
+
+uses(TestCase::class)->group('cross-db');
 
 use function Pest\Laravel\assertDatabaseCount;
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertDatabaseMissing;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Language::factory()->create([
@@ -57,9 +61,15 @@ test('can make an order', function () {
         'user_id' => null,
     ]);
 
-    $data = $order->getRawOriginal();
-
-    $this->assertDatabaseHas((new Order)->getTable(), $data);
+    $this->assertDatabaseHas((new Order)->getTable(), [
+        'id' => $order->id,
+        'reference' => $order->reference,
+        'status' => $order->status,
+        'sub_total' => $order->sub_total,
+        'tax_total' => $order->tax_total,
+        'total' => $order->total,
+        'currency_code' => $order->currency_code,
+    ]);
 });
 
 test('order has correct casting', function () {
@@ -182,7 +192,7 @@ test('can have user and customer associated', function () {
         'email' => 'test@domain.com',
         'email_verified_at' => now(),
         'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-        'remember_token' => \Illuminate\Support\Str::random(10),
+        'remember_token' => Str::random(10),
     ]);
 
     $customer = $user->customers()->create(
@@ -222,7 +232,7 @@ test('can cast and store shipping breakdown', function () {
             new ShippingBreakdownItem(
                 name: 'Breakdown A',
                 identifier: 'BA',
-                price: $shippingPrice = new Price(123, $currency = Currency::getDefault(), 1)
+                price: $shippingPrice = new PriceValue(123, $currency = Currency::getDefault(), 1)
             ),
         ])
     );
@@ -230,16 +240,6 @@ test('can cast and store shipping breakdown', function () {
     $order->shipping_breakdown = $breakdown;
 
     $order->save();
-
-    $this->assertDatabaseHas((new Order)->getTable(), [
-        'shipping_breakdown' => json_encode([[
-            'name' => 'Breakdown A',
-            'identifier' => 'BA',
-            'value' => 123,
-            'formatted' => $shippingPrice->formatted,
-            'currency' => $currency->toArray(),
-        ]]),
-    ]);
 
     $breakdown = $order->refresh()->shipping_breakdown;
 
@@ -249,7 +249,7 @@ test('can cast and store shipping breakdown', function () {
 
     expect($breakdownItem->name)->toEqual('Breakdown A');
     expect($breakdownItem->identifier)->toEqual('BA');
-    expect($breakdownItem->price)->toBeInstanceOf(Price::class);
+    expect($breakdownItem->price)->toBeInstanceOf(PriceValue::class);
     expect($breakdownItem->price->value)->toEqual(123);
 });
 
@@ -269,8 +269,8 @@ test('can delete an order', function () {
     OrderLine::factory(4)->create([
         'order_id' => $order->id,
         'tax_breakdown' => new TaxBreakdown(collect([
-            new \Lunar\Base\ValueObjects\Cart\TaxBreakdownAmount(
-                price: new Price(10, $currency),
+            new TaxBreakdownAmount(
+                price: new PriceValue(10, $currency),
                 identifier: 'VAT',
                 description: 'VAT',
                 percentage: 20

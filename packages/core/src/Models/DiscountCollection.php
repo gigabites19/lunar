@@ -1,13 +1,12 @@
 <?php
 
-namespace Lunar\Models;
+namespace Lunar\Core\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Lunar\Base\BaseModel;
-use Lunar\Database\Factories\DiscountableFactory;
+use Lunar\Core\Database\Factories\DiscountableFactory;
 
-class DiscountCollection extends BaseModel implements Contracts\DiscountCollection
+class DiscountCollection extends Base implements Contracts\DiscountCollection
 {
     use HasFactory;
 

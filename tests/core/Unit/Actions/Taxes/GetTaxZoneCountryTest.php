@@ -1,12 +1,14 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\Actions\Taxes\GetTaxZoneCountry;
+use Lunar\Core\Models\Country;
+use Lunar\Core\Models\TaxZoneCountry;
+use Lunar\Tests\Core\TestCase;
 
-use Lunar\Actions\Taxes\GetTaxZoneCountry;
-use Lunar\Models\Country;
-use Lunar\Models\TaxZoneCountry;
+uses(TestCase::class);
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class)->group('taxes');
+uses(RefreshDatabase::class)->group('taxes');
 
 test('can match country id', function () {
     $belgium = Country::factory()->create([

@@ -1,19 +1,21 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\Actions\Carts\CalculateLine;
+use Lunar\Core\DataObjects\PriceValue as DataTypesPrice;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\CustomerGroup;
+use Lunar\Core\Models\Price;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Core\Models\TaxClass;
+use Lunar\Core\Models\TaxRateAmount;
+use Lunar\Core\ValueObjects\Cart\TaxBreakdown;
+use Lunar\Tests\Core\TestCase;
 
-use Lunar\Actions\Carts\CalculateLine;
-use Lunar\Base\ValueObjects\Cart\TaxBreakdown;
-use Lunar\DataTypes\Price as DataTypesPrice;
-use Lunar\Models\Cart;
-use Lunar\Models\Currency;
-use Lunar\Models\CustomerGroup;
-use Lunar\Models\Price;
-use Lunar\Models\ProductVariant;
-use Lunar\Models\TaxClass;
-use Lunar\Models\TaxRateAmount;
+uses(TestCase::class);
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('can calculate line', function () {
     $currency = Currency::factory()->create([
@@ -312,7 +314,7 @@ function check_for_know_rounding_error_on_unit_price_with_unit_quantity_of_one()
     ]);
 
     Price::factory()->create([
-        'price' => 912, //Known failing value
+        'price' => 912, // Known failing value
         'currency_id' => $currency->id,
         'min_quantity' => 1,
         'priceable_type' => $purchasable->getMorphClass(),

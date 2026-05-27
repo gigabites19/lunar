@@ -1,21 +1,21 @@
 <?php
 
-namespace Lunar\Managers;
+namespace Lunar\Core\Managers;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
-use Lunar\Base\DataTransferObjects\PricingResponse;
-use Lunar\Base\PricingManagerInterface;
-use Lunar\Base\Purchasable;
-use Lunar\Exceptions\MissingCurrencyPriceException;
-use Lunar\Models\Contracts\Currency as CurrencyContract;
-use Lunar\Models\Contracts\CustomerGroup as CustomerGroupContract;
-use Lunar\Models\Currency;
-use Lunar\Models\CustomerGroup;
+use Lunar\Core\Contracts\PricingManager as PricingManagerContract;
+use Lunar\Core\Contracts\Purchasable;
+use Lunar\Core\DataObjects\PricingResponse;
+use Lunar\Core\Exceptions\MissingCurrencyPriceException;
+use Lunar\Core\Models\Contracts\Currency as CurrencyContract;
+use Lunar\Core\Models\Contracts\CustomerGroup as CustomerGroupContract;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\CustomerGroup;
 
-class PricingManager implements PricingManagerInterface
+class PricingManager implements PricingManagerContract
 {
     /**
      * The DTO of the pricing.
@@ -47,12 +47,14 @@ class PricingManager implements PricingManagerInterface
      */
     public ?Collection $customerGroups = null;
 
-    public function __construct()
-    {
-        if (Auth::check() && is_lunar_user(Auth::user())) {
-            $this->user = Auth::user();
-        }
-    }
+    /**
+     * Whether the user has been resolved (explicitly or from auth).
+     */
+    protected bool $userResolved = false;
+
+    public function __construct(
+        protected AuthFactory $auth,
+    ) {}
 
     /**
      * Set the purchasable property.
@@ -74,6 +76,7 @@ class PricingManager implements PricingManagerInterface
     public function user(?Authenticatable $user)
     {
         $this->user = $user;
+        $this->userResolved = true;
 
         return $this;
     }
@@ -86,6 +89,7 @@ class PricingManager implements PricingManagerInterface
     public function guest()
     {
         $this->user = null;
+        $this->userResolved = true;
 
         return $this;
     }
@@ -143,13 +147,15 @@ class PricingManager implements PricingManagerInterface
     /**
      * Get the price for the purchasable.
      *
-     * @return \Lunar\Base\DataTransferObjects\PricingResponse
+     * @return PricingResponse
      */
     public function get()
     {
         if (! $this->purchasable) {
             throw new \ErrorException('No purchasable set.');
         }
+
+        $this->resolveUser();
 
         if (! $this->currency) {
             $this->currency = Currency::getDefault();
@@ -227,6 +233,26 @@ class PricingManager implements PricingManagerInterface
         $this->reset();
 
         return $response;
+    }
+
+    /**
+     * Resolve the user from auth on first use, unless one has been set
+     * explicitly via user()/guest(). Reads on demand rather than at
+     * construction so a manager built before login still sees the user.
+     */
+    private function resolveUser(): void
+    {
+        if ($this->userResolved) {
+            return;
+        }
+
+        $this->userResolved = true;
+
+        $user = $this->auth->guard()->user();
+
+        if ($user && is_lunar_user($user)) {
+            $this->user = $user;
+        }
     }
 
     /**

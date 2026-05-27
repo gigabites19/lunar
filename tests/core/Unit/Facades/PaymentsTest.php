@@ -1,16 +1,18 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
-
-use Lunar\Base\DataTransferObjects\PaymentAuthorize;
-use Lunar\Base\PaymentManagerInterface;
-use Lunar\Facades\Payments;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\Contracts\PaymentManager;
+use Lunar\Core\DataObjects\PaymentAuthorize;
+use Lunar\Core\Facades\Payments;
 use Lunar\Tests\Core\Stubs\TestPaymentDriver;
+use Lunar\Tests\Core\TestCase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(TestCase::class);
+
+uses(RefreshDatabase::class);
 
 test('accessor is correct', function () {
-    expect(Payments::getFacadeAccessor())->toEqual(PaymentManagerInterface::class);
+    expect(Payments::getFacadeAccessor())->toEqual(PaymentManager::class);
 });
 
 test('can extend payments', function () {

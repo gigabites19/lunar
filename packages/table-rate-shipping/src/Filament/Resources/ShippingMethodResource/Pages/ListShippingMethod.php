@@ -5,8 +5,9 @@ namespace Lunar\Shipping\Filament\Resources\ShippingMethodResource\Pages;
 use Filament\Actions;
 use Filament\Schemas\Components\Group;
 use Lunar\Admin\Support\Pages\BaseListRecords;
-use Lunar\Models\CustomerGroup;
+use Lunar\Core\Models\CustomerGroup;
 use Lunar\Shipping\Filament\Resources\ShippingMethodResource;
+use Lunar\Shipping\Filament\Resources\ShippingMethodResource\Schemas\ShippingMethodForm;
 use Lunar\Shipping\Models\ShippingMethod;
 
 class ListShippingMethod extends BaseListRecords
@@ -17,12 +18,13 @@ class ListShippingMethod extends BaseListRecords
     {
         return [
             Actions\CreateAction::make()->form([
-                ShippingMethodResource::getNameFormComponent(),
+                ShippingMethodForm::getNameComponent(),
                 Group::make([
-                    ShippingMethodResource::getCodeFormComponent(),
-                    ShippingMethodResource::getDriverFormComponent(),
+                    ShippingMethodForm::getCodeComponent(),
+                    ShippingMethodForm::getDriverComponent(),
+                    ShippingMethodForm::getChargeByComponent(),
                 ])->columns(2),
-                ShippingMethodResource::getDescriptionFormComponent(),
+                ShippingMethodForm::getDescriptionComponent(),
             ])->after(function (ShippingMethod $shippingMethod) {
                 $customerGroups = CustomerGroup::pluck('id')->mapWithKeys(
                     fn ($id) => [$id => ['visible' => true, 'enabled' => true, 'starts_at' => now()]]

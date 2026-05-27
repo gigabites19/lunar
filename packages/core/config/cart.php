@@ -1,18 +1,22 @@
 <?php
 
-use Lunar\Actions\Carts\GenerateFingerprint;
+use Lunar\Core\Pipelines\Cart\ApplyDiscounts;
+use Lunar\Core\Pipelines\Cart\ApplyShipping;
+use Lunar\Core\Pipelines\Cart\Calculate;
+use Lunar\Core\Pipelines\Cart\CalculateLines;
+use Lunar\Core\Pipelines\Cart\CalculateShippingSubTotal;
+use Lunar\Core\Pipelines\Cart\CalculateTax;
+use Lunar\Core\Pipelines\CartLine\GetUnitPrice;
+use Lunar\Core\Pipelines\CartPrune\PruneAfter;
+use Lunar\Core\Pipelines\CartPrune\WhereNotMerged;
+use Lunar\Core\Pipelines\CartPrune\WithoutOrders;
+use Lunar\Core\Validation\Cart\ShippingOptionValidator;
+use Lunar\Core\Validation\Cart\ValidateCartForOrderCreation;
+use Lunar\Core\Validation\CartLine\CartLineAvailability;
+use Lunar\Core\Validation\CartLine\CartLineQuantity;
+use Lunar\Core\Validation\CartLine\CartLineStock;
 
 return [
-    /*
-    |--------------------------------------------------------------------------
-    | Fingerprint Generator
-    |--------------------------------------------------------------------------
-    |
-    | Specify which class should be used when generating a cart fingerprint.
-    |
-    */
-    'fingerprint_generator' => GenerateFingerprint::class,
-
     /*
     |--------------------------------------------------------------------------
     | Authentication policy
@@ -42,38 +46,20 @@ return [
          * Run these pipelines when the cart is calculating.
         */
         'cart' => [
-            Lunar\Pipelines\Cart\CalculateLines::class,
-            Lunar\Pipelines\Cart\ApplyShipping::class,
-            Lunar\Pipelines\Cart\ApplyDiscounts::class,
-            Lunar\Pipelines\Cart\CalculateTax::class,
-            Lunar\Pipelines\Cart\Calculate::class,
+            CalculateLines::class,
+            ApplyShipping::class,
+            CalculateShippingSubTotal::class,
+            ApplyDiscounts::class,
+            CalculateTax::class,
+            Calculate::class,
         ],
 
         /*
          * Run these pipelines when the cart lines are being calculated.
         */
         'cart_lines' => [
-            Lunar\Pipelines\CartLine\GetUnitPrice::class,
+            GetUnitPrice::class,
         ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cart Actions
-    |--------------------------------------------------------------------------
-    |
-    | Here you can decide what action should be run during a Carts lifecycle.
-    | The default actions should be fine for most cases.
-    |
-    */
-    'actions' => [
-        'add_to_cart' => Lunar\Actions\Carts\AddOrUpdatePurchasable::class,
-        'get_existing_cart_line' => Lunar\Actions\Carts\GetExistingCartLine::class,
-        'update_cart_line' => Lunar\Actions\Carts\UpdateCartLine::class,
-        'remove_from_cart' => Lunar\Actions\Carts\RemovePurchasable::class,
-        'add_address' => Lunar\Actions\Carts\AddAddress::class,
-        'set_shipping_option' => Lunar\Actions\Carts\SetShippingOption::class,
-        'order_create' => Lunar\Actions\Carts\CreateOrder::class,
     ],
 
     /*
@@ -88,23 +74,25 @@ return [
     'validators' => [
 
         'add_to_cart' => [
-            Lunar\Validation\CartLine\CartLineQuantity::class,
-            Lunar\Validation\CartLine\CartLineStock::class,
+            CartLineQuantity::class,
+            CartLineStock::class,
+            CartLineAvailability::class,
         ],
 
         'update_cart_line' => [
-            Lunar\Validation\CartLine\CartLineQuantity::class,
-            Lunar\Validation\CartLine\CartLineStock::class,
+            CartLineQuantity::class,
+            CartLineStock::class,
+            CartLineAvailability::class,
         ],
 
         'remove_from_cart' => [],
 
         'set_shipping_option' => [
-            Lunar\Validation\Cart\ShippingOptionValidator::class,
+            ShippingOptionValidator::class,
         ],
 
         'order_create' => [
-            Lunar\Validation\Cart\ValidateCartForOrderCreation::class,
+            ValidateCartForOrderCreation::class,
         ],
 
     ],
@@ -144,9 +132,9 @@ return [
         'enabled' => false,
 
         'pipelines' => [
-            Lunar\Pipelines\CartPrune\PruneAfter::class,
-            Lunar\Pipelines\CartPrune\WithoutOrders::class,
-            Lunar\Pipelines\CartPrune\WhereNotMerged::class,
+            PruneAfter::class,
+            WithoutOrders::class,
+            WhereNotMerged::class,
         ],
 
         'prune_interval' => 90, // days

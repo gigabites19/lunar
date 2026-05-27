@@ -1,25 +1,24 @@
 <?php
 
 return [
-
     'label' => 'Produit',
-
     'plural_label' => 'Produits',
-
     'tabs' => [
         'all' => 'Tous',
+        'published' => 'Published',
+        'draft' => 'Draft',
     ],
-
     'status' => [
         'unpublished' => [
-            'content' => 'Actuellement en statut de brouillon, ce produit est masqué sur tous les canaux et groupes de clients.',
+            'content' => 'Actuellement en statut de brouillon, ce produit est indisponible sur tous les canaux et groupes de clients.',
         ],
         'availability' => [
             'customer_groups' => 'Ce produit est actuellement indisponible pour tous les groupes de clients.',
             'channels' => 'Ce produit est actuellement indisponible pour tous les canaux.',
+            'hidden_from_guests' => 'Les invités ne peuvent actuellement ni voir ni acheter ce produit. Le groupe de clients par défaut n\'est pas activé ou visible pour ce produit.',
+            'no_default_customer_group' => 'Aucun groupe de clients par défaut n\'est défini, la visibilité pour les invités ne peut donc pas être contrôlée ici. Définissez un groupe de clients par défaut pour gérer l\'accès des invités.',
         ],
     ],
-
     'table' => [
         'status' => [
             'label' => 'Statut',
@@ -45,14 +44,12 @@ return [
             'label' => 'Type de produit',
         ],
     ],
-
     'actions' => [
         'edit_status' => [
             'label' => 'Mettre à jour le statut',
             'heading' => 'Mettre à jour le statut',
         ],
     ],
-
     'form' => [
         'name' => [
             'label' => 'Nom',
@@ -81,12 +78,13 @@ return [
         ],
         'tags' => [
             'label' => 'Étiquettes',
+            'helper_text' => 'Separate tags by pressing Enter, Tab or comma (,)',
         ],
         'collections' => [
             'label' => 'Collections',
+            'select_collection' => 'Select a collection',
         ],
     ],
-
     'pages' => [
         'availability' => [
             'label' => 'Disponibilité',
@@ -125,5 +123,4 @@ return [
             'label' => 'Associations de produits',
         ],
     ],
-
 ];

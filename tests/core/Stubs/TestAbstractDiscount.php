@@ -2,10 +2,10 @@
 
 namespace Lunar\Tests\Core\Stubs;
 
-use Lunar\Base\ValueObjects\Cart\DiscountBreakdown;
-use Lunar\DataTypes\Price;
-use Lunar\DiscountTypes\AbstractDiscountType;
-use Lunar\Models\Contracts\Cart;
+use Lunar\Core\DataObjects\PriceValue;
+use Lunar\Core\DiscountTypes\AbstractDiscountType;
+use Lunar\Core\Models\Contracts\Cart;
+use Lunar\Core\ValueObjects\Cart\DiscountBreakdown;
 
 class TestAbstractDiscount extends AbstractDiscountType
 {
@@ -21,16 +21,12 @@ class TestAbstractDiscount extends AbstractDiscountType
         }
 
         foreach ($cart->lines as $line) {
-            $line->discountTotal = new Price(100, $cart->currency);
-            $line->subTotalDiscounted = new Price(
-                900,
-                $cart->currency,
-                1
-            );
+            $line->discountTotal = new PriceValue(100, $cart->currency);
+            $line->subTotalDiscounted = new PriceValue(900, $cart->currency);
         }
 
         $this->addDiscountBreakdown($cart, new DiscountBreakdown(
-            price: new Price(100, $cart->currency, 1),
+            price: new PriceValue(100, $cart->currency),
             lines: $cart->lines,
             discount: $this->discount,
         ));

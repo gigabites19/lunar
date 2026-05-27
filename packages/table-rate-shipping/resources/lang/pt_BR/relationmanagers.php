@@ -39,6 +39,7 @@ return [
                     ],
                     'min_weight' => [
                         'label' => 'Peso mín.',
+                        'helper_text' => 'Insira o peso em quilogramas',
                     ],
                     'price' => [
                         'label' => 'Preço',
@@ -47,8 +48,15 @@ return [
             ],
         ],
         'table' => [
+            'enabled' => [
+                'label' => 'Enabled',
+            ],
+            'disabled' => [
+                'label' => 'disabled',
+            ],
             'shipping_method' => [
                 'label' => 'Método de envio',
+                'disabled' => 'Disabled',
             ],
             'price' => [
                 'label' => 'Preço',

@@ -1,14 +1,13 @@
 <?php
 
-namespace Lunar\Pipelines\Cart;
+namespace Lunar\Core\Pipelines\Cart;
 
 use Closure;
-use Lunar\Base\ValueObjects\Cart\ShippingBreakdown;
-use Lunar\Base\ValueObjects\Cart\ShippingBreakdownItem;
-use Lunar\DataTypes\Price;
-use Lunar\Facades\ShippingManifest;
-use Lunar\Models\Cart;
-use Lunar\Models\Contracts\Cart as CartContract;
+use Lunar\Core\Facades\ShippingManifest;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\Contracts\Cart as CartContract;
+use Lunar\Core\ValueObjects\Cart\ShippingBreakdown;
+use Lunar\Core\ValueObjects\Cart\ShippingBreakdownItem;
 
 final class ApplyShipping
 {
@@ -20,16 +19,11 @@ final class ApplyShipping
     public function handle(CartContract $cart, Closure $next): mixed
     {
         /** @var Cart $cart */
-        $shippingSubTotal = 0;
-        $shippingBreakdown = $cart->shippingBreakdown ?: new ShippingBreakdown;
+        $shippingBreakdown = new ShippingBreakdown;
 
         $shippingOption = $cart->shippingOptionOverride ?: ShippingManifest::getShippingOption($cart);
 
         if ($shippingOption) {
-            if ($cart->shippingOptionOverride) {
-                $shippingBreakdown->items = collect();
-            }
-
             $shippingBreakdown->items->put(
                 $shippingOption->getIdentifier(),
                 new ShippingBreakdownItem(
@@ -39,22 +33,13 @@ final class ApplyShipping
                 )
             );
 
-            $shippingSubTotal = $shippingOption->price->value;
-            $shippingTotal = $shippingSubTotal;
-
             if ($cart->shippingAddress && ! $cart->shippingBreakdown) {
-                $cart->shippingAddress->shippingTotal = new Price($shippingTotal, $cart->currency, 1);
-                $cart->shippingAddress->shippingSubTotal = new Price($shippingOption->price->value, $cart->currency, 1);
+                $cart->shippingAddress->shippingTotal = $shippingOption->price;
+                $cart->shippingAddress->shippingSubTotal = $shippingOption->price;
             }
         }
 
         $cart->shippingBreakdown = $shippingBreakdown;
-
-        $cart->shippingSubTotal = new Price(
-            $shippingBreakdown->items->sum('price.value'),
-            $cart->currency,
-            1
-        );
 
         return $next($cart);
     }

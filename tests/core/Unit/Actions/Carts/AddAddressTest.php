@@ -1,13 +1,16 @@
 <?php
 
-uses(\Lunar\Tests\Core\TestCase::class);
-use Lunar\Actions\Carts\AddAddress;
-use Lunar\Models\Address;
-use Lunar\Models\Cart;
-use Lunar\Models\CartAddress;
-use Lunar\Models\Currency;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Lunar\Core\Actions\Carts\AddAddress;
+use Lunar\Core\Models\Address;
+use Lunar\Core\Models\Cart;
+use Lunar\Core\Models\CartAddress;
+use Lunar\Core\Models\Currency;
+use Lunar\Tests\Core\TestCase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(TestCase::class);
+
+uses(RefreshDatabase::class);
 
 test('can add address from addressable', function () {
     $address = Address::factory()->create();

@@ -1,8 +1,8 @@
 <?php
 
-namespace Lunar\Observers;
+namespace Lunar\Core\Observers;
 
-use Lunar\Models\Contracts\Product as ProductContract;
+use Lunar\Core\Models\Contracts\Product as ProductContract;
 
 class ProductObserver
 {
@@ -22,20 +22,12 @@ class ProductObserver
 
             $product->productOptions()->detach();
 
-            $product->associations()->delete();
-
-            $product->inverseAssociations()->delete();
-
             $product->channels()->detach();
 
             $product->tags()->detach();
-        } else {
-            $product->variants()->get()->each->delete();
         }
-    }
 
-    public function restored(ProductContract $product): void
-    {
-        $product->variants()->withTrashed()->get()->each->restore();
+        $product->associations()->delete();
+        $product->inverseAssociations()->delete();
     }
 }

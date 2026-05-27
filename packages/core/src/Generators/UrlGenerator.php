@@ -1,34 +1,36 @@
 <?php
 
-namespace Lunar\Generators;
+namespace Lunar\Core\Generators;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Lunar\Models\Contracts\Language as LanguageContract;
-use Lunar\Models\Language;
-use Lunar\Models\Url;
+use Lunar\Core\Models\Contracts\Language as LanguageContract;
+use Lunar\Core\Models\Language;
+use Lunar\Core\Models\Url;
 
 class UrlGenerator
 {
     /**
      * The instance of the model.
      *
-     * @var \Illuminate\Database\Eloquent\Model
+     * @var Model
      */
     protected $model;
 
     /**
-     * The default language.
+     * The default language, resolved lazily on first use.
      */
-    protected LanguageContract $defaultLanguage;
+    protected ?LanguageContract $defaultLanguage = null;
 
     /**
-     * Construct the class.
+     * Return the default language, resolving it on first access. Deferred out
+     * of the constructor so the generator can be built before the languages
+     * table is queryable (e.g. when resolved early in a migration).
      */
-    public function __construct()
+    protected function defaultLanguage(): LanguageContract
     {
-        $this->defaultLanguage = Language::getDefault();
+        return $this->defaultLanguage ??= Language::getDefault();
     }
 
     /**
@@ -61,7 +63,7 @@ class UrlGenerator
 
         $this->model->urls()->create([
             'default' => true,
-            'language_id' => $this->defaultLanguage->id,
+            'language_id' => $this->defaultLanguage()->id,
             'slug' => $uniqueSlug,
         ]);
     }
@@ -100,14 +102,14 @@ class UrlGenerator
      *
      * @param  string  $slug
      * @param  string  $separator
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return Collection
      */
     private function getExistingSlugs($slug, $separator)
     {
         return Url::where(function ($query) use ($slug, $separator) {
             $query->where('slug', $slug)
                 ->orWhere('slug', 'like', $slug.$separator.'%');
-        })->whereLanguageId($this->defaultLanguage->id)
+        })->whereLanguageId($this->defaultLanguage()->id)
             ->select(['element_id', 'slug'])
             ->get()
             ->toBase()

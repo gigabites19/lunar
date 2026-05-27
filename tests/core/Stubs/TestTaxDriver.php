@@ -2,17 +2,18 @@
 
 namespace Lunar\Tests\Core\Stubs;
 
-use Lunar\Base\Addressable;
-use Lunar\Base\Purchasable;
-use Lunar\Base\TaxDriver;
-use Lunar\Base\ValueObjects\Cart\TaxBreakdown;
-use Lunar\Base\ValueObjects\Cart\TaxBreakdownAmount;
-use Lunar\DataTypes\Price;
-use Lunar\Models\Contracts\CartLine as CartLineContract;
-use Lunar\Models\Contracts\Currency as CurrencyContract;
-use Lunar\Models\Currency;
-use Lunar\Models\ProductVariant;
-use Lunar\Models\TaxRateAmount;
+use Lunar\Core\Contracts\Addressable;
+use Lunar\Core\Contracts\Purchasable;
+use Lunar\Core\DataObjects\PriceValue;
+use Lunar\Core\Drivers\TaxDriver;
+use Lunar\Core\Models\Contracts\CartLine as CartLineContract;
+use Lunar\Core\Models\Contracts\Currency as CurrencyContract;
+use Lunar\Core\Models\Contracts\TaxZone as TaxZoneContract;
+use Lunar\Core\Models\Currency;
+use Lunar\Core\Models\ProductVariant;
+use Lunar\Core\Models\TaxRateAmount;
+use Lunar\Core\ValueObjects\Cart\TaxBreakdown;
+use Lunar\Core\ValueObjects\Cart\TaxBreakdownAmount;
 
 class TestTaxDriver implements TaxDriver
 {
@@ -40,6 +41,11 @@ class TestTaxDriver implements TaxDriver
      * The cart line.
      */
     protected CartLineContract $cartLine;
+
+    /**
+     * The optional tax zone override.
+     */
+    protected ?TaxZoneContract $taxZone = null;
 
     /**
      * {@inheritDoc}
@@ -94,13 +100,31 @@ class TestTaxDriver implements TaxDriver
     /**
      * {@inheritDoc}
      */
+    public function setTaxZone(?TaxZoneContract $taxZone = null): self
+    {
+        $this->taxZone = $taxZone;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getBreakdown($subTotal): TaxBreakdown
     {
         $breakdown = new TaxBreakdown;
 
         if ($this->purchasable) {
             $taxClass = $this->purchasable->getTaxClass();
-            $taxAmounts = $taxClass->taxRateAmounts;
+
+            // When a zone override is provided, restrict to that zone's rate amounts
+            // (mirrors SystemTaxDriver behaviour so cart-level zone tests work correctly).
+            if ($this->taxZone) {
+                $taxAmounts = $this->taxZone->taxAmounts()->whereTaxClassId($taxClass->id)->get();
+            } else {
+                $taxClass->loadMissing('taxRateAmounts');
+                $taxAmounts = $taxClass->taxRateAmounts;
+            }
         } else {
             $taxAmounts = TaxRateAmount::factory(2)->create();
         }
@@ -119,7 +143,7 @@ class TestTaxDriver implements TaxDriver
             $result = round($subTotal * ($amount->percentage / 100));
 
             $amount = new TaxBreakdownAmount(
-                price: new Price((int) $result, $this->currency, $this->purchasable->getUnitQuantity()),
+                price: new PriceValue((int) $result, $this->currency),
                 identifier: "tax_rate_{$amount->taxRate->id}",
                 description: $amount->taxRate->name,
                 percentage: $amount->percentage
